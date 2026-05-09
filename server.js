@@ -336,6 +336,8 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Cilex Ibiza running at http://localhost:${PORT}`);
-  console.log(`Email API ready at  http://localhost:${PORT}/api/send-email`);
+  console.log(`Cilex Ibiza server started on port ${PORT}`);
+  console.log(`Local access: http://localhost:${PORT}`);
+  console.log(`Email API:    http://localhost:${PORT}/api/send-email`);
+  console.log(`RESEND_API_KEY: ${process.env.RESEND_API_KEY ? 'set ✓' : 'NOT SET ✗'}`);
 });
