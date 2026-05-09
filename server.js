@@ -7,10 +7,9 @@ const PORT   = process.env.PORT || 3000;
 const ROOT   = __dirname;
 
 if (!process.env.RESEND_API_KEY) {
-  console.error('ERROR: RESEND_API_KEY environment variable is not set.');
-  process.exit(1);
+  console.warn('WARNING: RESEND_API_KEY not set — email sending will be disabled.');
 }
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // ─── EMAIL CONFIG ─────────────────────────────────────────────────
 // SENDER_FROM: change to your verified domain once set up in Resend
@@ -261,6 +260,11 @@ const server = http.createServer((req, res) => {
       try {
         const { booking } = JSON.parse(body);
         if (!booking) throw new Error('Missing booking payload');
+        if (!resend) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Email service not configured — set RESEND_API_KEY' }));
+          return;
+        }
 
         const sent = [];
         const failed = [];
