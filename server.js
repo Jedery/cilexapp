@@ -5,7 +5,12 @@ const { Resend } = require('resend');
 
 const PORT   = process.env.PORT || 3000;
 const ROOT   = __dirname;
-const resend = new Resend(process.env.RESEND_API_KEY || 're_UKSGxfpw_KRPZ16dG9MHZ9PjWzX4SxGBz');
+
+if (!process.env.RESEND_API_KEY) {
+  console.error('ERROR: RESEND_API_KEY environment variable is not set.');
+  process.exit(1);
+}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─── EMAIL CONFIG ─────────────────────────────────────────────────
 // SENDER_FROM: change to your verified domain once set up in Resend

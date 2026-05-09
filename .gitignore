@@ -2,3 +2,8 @@ node_modules/
 .env
 .env.local
 *.log
+
+# Sensitive — never commit these
+supabase.conf
+migrate.js
+verify-db.js
