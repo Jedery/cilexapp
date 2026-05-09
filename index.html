@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Cilex Ibiza — Booking Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo">Cilex <span>Ibiza</span></div>
+  <div class="login-sub">Booking Manager</div>
+
+  <!-- PROMOTER login: nome + password -->
+  <div id="login-promoter-panel" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:20px">Accedi al tuo account</div>
+    <div class="login-field-wrap">
+      <label class="login-field-label">Nome utente</label>
+      <input class="login-field" id="lp-username" type="text" placeholder="Es. Marco La Fata" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')document.getElementById('lp-password').focus()">
+    </div>
+    <div class="login-field-wrap" style="margin-top:12px">
+      <label class="login-field-label">Password</label>
+      <div style="position:relative">
+        <input class="login-field" id="lp-password" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doPromoterLogin()">
+        <button onclick="togglePwdVisibility()" id="lp-eye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text3)">
+          <svg id="lp-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pin-error" id="lp-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="doPromoterLogin()">Accedi</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showSuperadminLogin()">Accesso manager →</button>
+  </div>
+
+  <!-- SUPERADMIN login: password -->
+  <div id="login-admin-panel" style="width:100%;max-width:340px;display:none;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:20px">Accesso Manager</div>
+    <div class="login-field-wrap">
+      <label class="login-field-label">Password Manager</label>
+      <div style="position:relative">
+        <input class="login-field" id="la-password" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminAuth()">
+        <button onclick="toggleAdminPwdVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text3)">
+          <svg id="la-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pin-error" id="la-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="doAdminAuth()">Verifica password</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showPromoterLogin()">← Torna all'accesso normale</button>
+  </div>
+
+  <!-- SUPERADMIN impersona: post-auth profile selection -->
+  <div id="login-admin-select" style="width:100%;max-width:340px;display:none;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:6px">Accedi come</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:18px;text-transform:uppercase;letter-spacing:0.5px">Scrivi il nome del profilo</div>
+    <div class="login-field-wrap" style="position:relative">
+      <input class="login-field" id="la-profile" type="text" placeholder="Tocca per vedere i profili" autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterAdminProfiles(this.value)" onfocus="showAdminProfileList()" onkeydown="handleAdminProfileKey(event)">
+    </div>
+    <div id="la-suggestions" style="display:none;background:var(--surface2);border:1px solid var(--border-strong);border-radius:var(--radius-lg);margin-top:6px;overflow-y:auto;max-height:280px"></div>
+    <div class="pin-error" id="la-select-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px" onclick="doAdminSelectLogin()">Accedi</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showPromoterLogin()">← Logout manager</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">CILEX <span>IBIZA</span></div>
+      <div class="logo-sub">Booking Manager</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Built dynamically by buildNav() after login -->
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="season-pill">☀️ Stagione 2026</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <div class="topbar-actions">
+        <!-- Notifications bell -->
+        <button class="bell-btn" id="bell-btn" onclick="toggleNotifPanel()" aria-label="Notifiche">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="bell-badge" id="bell-badge" style="display:none">0</span>
+        </button>
+        <button class="user-pill" id="topbar-user-pill" onclick="toggleUserDropdown()">
+          <div class="user-pill-av av-0" id="topbar-av"></div>
+          <span id="topbar-user-name">—</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <!-- User dropdown -->
+        <div id="user-dropdown" style="display:none;position:fixed;top:50px;right:12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(0,0,0,0.5);min-width:200px;z-index:150;overflow:hidden;max-width:calc(100vw - 24px);">
+          <div style="padding:14px 16px 12px;border-bottom:1px solid var(--border);">
+            <div id="dd-name" style="font-weight:600;font-size:14px;color:var(--text)"></div>
+            <div id="dd-role" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px"></div>
+          </div>
+          <div style="padding:6px;">
+            <button onclick="switchUser()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;background:none;border:none;border-radius:var(--radius);color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--text2)'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Cambia utente
+            </button>
+            <button onclick="logout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;background:none;border:none;border-radius:var(--radius);color:#F87171;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="export-csv-btn" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Esporta CSV
+        </button>
+
+        <!-- Notification panel -->
+        <div id="notif-panel" class="notif-panel">
+          <div class="notif-panel-header">
+            <span class="notif-panel-title">Notifiche</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button id="notif-broadcast-btn" onclick="openBroadcastModal()" class="notif-mini-btn" style="display:none" title="Invia messaggio">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8z"/></svg>
+              </button>
+              <button class="notif-mini-btn" onclick="markAllRead()" title="Segna tutte come lette">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button class="btn-close" onclick="closeNotifPanel()">×</button>
+            </div>
+          </div>
+          <div class="notif-tabs">
+            <button class="notif-tab active" data-filter="all" onclick="setNotifFilter('all')">Tutte</button>
+            <button class="notif-tab" data-filter="unread" onclick="setNotifFilter('unread')">Non lette</button>
+            <button class="notif-tab" data-filter="system" onclick="setNotifFilter('system')">Sistema</button>
+            <button class="notif-tab" data-filter="message" onclick="setNotifFilter('message')">Messaggi</button>
+          </div>
+          <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+            <input type="text" id="notif-search" placeholder="Cerca nelle notifiche..." oninput="setNotifSearch(this.value)" style="width:100%;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none">
+          </div>
+          <div id="notif-list" class="notif-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="dash-profile-header" id="dash-profile-header">
+        <div class="dash-profile-left">
+          <div class="dash-avatar-wrap" onclick="triggerProfileImageUpload()" title="Cambia foto profilo">
+            <div class="dash-avatar" id="dash-avatar-initials"></div>
+            <img class="dash-avatar-img" id="dash-avatar-img" src="" alt="" style="display:none">
+            <div class="dash-avatar-overlay">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 0 2-2l2-3h10l2 3a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <input type="file" id="profile-img-input" accept="image/*" style="display:none" onchange="onProfileImageSelected(event)">
+          </div>
+          <div class="dash-profile-info">
+            <div class="dash-greeting" id="dash-greeting">Buongiorno</div>
+            <div class="dash-name" id="dash-name">—</div>
+            <div class="dash-role-badge" id="dash-role-badge"></div>
+          </div>
+        </div>
+      </div>
+      <div id="urgent-banners"></div>
+      <div id="period-filter-wrap"></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="dashboard-table-title">Booking recenti</span>
+          <button class="btn btn-outline btn-sm" onclick="showPage('bookings', null)">Vedi tutti</button>
+        </div>
+        <div id="dashboard-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="page" id="page-bookings">
+      <div class="filters">
+        <input type="text" id="search-input" placeholder="Cerca cliente, email, prodotto..." oninput="renderBookingsTable()">
+        <select id="filter-status" onchange="renderBookingsTable()">
+          <option value="">Tutti gli stati</option>
+          <option value="confirmed">Confermato</option>
+          <option value="pending">In attesa</option>
+          <option value="cancelled">Cancellato</option>
+        </select>
+        <select id="filter-product" onchange="renderBookingsTable()">
+          <option value="">Tutti i prodotti</option>
+        </select>
+        <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="showPage('new-booking', null)">
+          + Nuova Prenotazione
+        </button>
+      </div>
+      <div class="card">
+        <div id="bookings-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- NEW BOOKING / EDIT -->
+    <div class="page" id="page-new-booking">
+      <div class="form-wrap">
+        <div class="card" style="padding: 24px">
+          <input type="hidden" id="edit-id">
+
+          <div class="form-section">
+            <div class="form-section-title">Dati cliente</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nome e cognome *</label>
+                <input type="text" id="f-name">
+              </div>
+              <div class="form-group">
+                <label>Telefono *</label>
+                <div style="display:flex">
+                  <select id="f-phone-prefix" style="width:118px;flex-shrink:0;border-radius:var(--radius) 0 0 var(--radius);border-right:none;font-size:12px;padding-left:7px">
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+31">🇳🇱 +31</option>
+                    <option value="+32">🇧🇪 +32</option>
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+43">🇦🇹 +43</option>
+                    <option value="+351">🇵🇹 +351</option>
+                    <option value="+30">🇬🇷 +30</option>
+                    <option value="+48">🇵🇱 +48</option>
+                    <option value="+36">🇭🇺 +36</option>
+                    <option value="+40">🇷🇴 +40</option>
+                    <option value="+7">🇷🇺 +7</option>
+                    <option value="+380">🇺🇦 +380</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+81">🇯🇵 +81</option>
+                    <option value="+82">🇰🇷 +82</option>
+                    <option value="+86">🇨🇳 +86</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+212">🇲🇦 +212</option>
+                    <option value="+27">🇿🇦 +27</option>
+                  </select>
+                  <input type="tel" id="f-phone" inputmode="numeric" style="flex:1;border-radius:0 var(--radius) var(--radius) 0">
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>Email *</label>
+                <input type="email" id="f-email">
+              </div>
+              <div class="form-group">
+                <label>Lingua</label>
+                <select id="f-language">
+                  <option value="">—</option>
+                  <option>Italiano</option>
+                  <option>Inglese</option>
+                  <option>Spagnolo</option>
+                  <option>Francese</option>
+                  <option>Tedesco</option>
+                  <option>Altro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Dettagli prodotto</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Prodotto *</label>
+                <select id="f-product" onchange="onProductChange()">
+                  <option value="">Seleziona prodotto...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Numero persone *</label>
+                <input type="number" id="f-pax" min="1" value="1" oninput="recalcTotal()">
+              </div>
+              <div class="form-group">
+                <label>Data evento</label>
+                <input type="date" id="f-date">
+              </div>
+              <div class="form-group">
+                <label>Orario incontro</label>
+                <select id="f-time">
+                  <option value="">— Seleziona prima il prodotto —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Agente</label>
+                <input type="text" id="f-agent" readonly style="background:var(--surface3);color:var(--text3);cursor:default;border-color:var(--border)">
+              </div>
+              <div class="form-group">
+                <label>Posizione vendita</label>
+                <select id="f-location">
+                  <option value="">—</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Pagamento</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Metodo di pagamento</label>
+                <select id="f-payment-method" onchange="recalcTotal()">
+                  <option value="">—</option>
+                  <option>Contanti</option>
+                  <option>Carta di credito</option>
+                  <option>Bonifico bancario</option>
+                  <option>PayPal</option>
+                  <option>Satispay</option>
+                  <option>Revolut</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Stato pagamento</label>
+                <div id="f-payment-status-display" style="padding:9px 12px;font-size:13px;border-radius:var(--radius);background:var(--surface2);border:1px solid var(--border-strong);display:flex;align-items:center;gap:8px;">
+                  <span class="badge badge-pending">In attesa</span>
+                  <span style="font-size:11px;color:var(--text3)">Calcolato automaticamente</span>
+                </div>
+                <input type="hidden" id="f-payment-status" value="pending">
+              </div>
+              <div class="form-group">
+                <label>Prezzo totale (€)</label>
+                <input type="number" id="f-total" step="0.01" min="0" readonly style="background:var(--surface3);color:var(--cyan);cursor:default;border-color:var(--border);font-weight:600" placeholder="0.00">
+                <div id="f-surcharge-note" style="display:none;margin-top:6px;font-size:11px;color:#FCD34D;align-items:center;gap:5px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span id="f-surcharge-text"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Acconto ricevuto (€)</label>
+                <input type="number" id="f-deposit" step="0.01" min="0" placeholder="0.00" oninput="recalcStatus()">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Note</div>
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Note interne</label>
+                <textarea id="f-notes"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-gold" onclick="saveBooking()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salva prenotazione
+            </button>
+            <button class="btn btn-outline" onclick="clearForm()">Cancella campi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px">
+        <button class="btn btn-gold" onclick="openAddProduct()">+ Aggiungi prodotto</button>
+      </div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="page" id="page-team">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:20px">
+        <button class="btn btn-gold" onclick="openAddMember()">+ Aggiungi membro</button>
+      </div>
+      <div class="role-sections" id="team-sections"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div id="settings-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Dettaglio Prenotazione</span>
+      <button class="btn-close" onclick="closeModal('modal-detail')">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="modal-delete-btn">Elimina</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-detail')">Chiudi</button>
+      <button class="btn btn-gold btn-sm" id="modal-edit-btn">Modifica</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD PRODUCT -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-product-title">Nuovo Prodotto</span>
+      <button class="btn-close" onclick="closeModal('modal-product')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Nome prodotto *</label>
+        <input type="text" id="p-name" placeholder="Es. Open Bar">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Descrizione</label>
+        <textarea id="p-desc" placeholder="Descrizione del prodotto..." style="min-height:70px"></textarea>
+      </div>
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group">
+          <label>Prezzo base (€/pers.)</label>
+          <input type="number" id="p-price" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Emoji / Icona</label>
+          <input type="text" id="p-emoji" placeholder="🍹" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label>Colore sfondo</label>
+          <input type="color" id="p-color" value="#FFF8ED">
+        </div>
+        <div class="form-group">
+          <label>Commissione promoter (%)</label>
+          <input type="number" id="p-commission" placeholder="Es. 10" step="0.5" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label>Durata</label>
+          <input type="text" id="p-duration" placeholder="Es. 4 ore, tutto il giorno">
+        </div>
+        <div class="form-group full">
+          <label>Note prodotto (per email)</label>
+          <textarea id="p-notes" placeholder="Info utili da includere nell'email di conferma..." style="min-height:60px"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Fasce orarie disponibili</label>
+          <textarea id="p-timeslots" placeholder="Una fascia per riga, es:&#10;21:00 - 00:00&#10;22:00 - 01:00&#10;23:00 - 02:00" style="min-height:90px;font-family:monospace;font-size:12px"></textarea>
+          <span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">Una fascia oraria per riga. Lascia vuoto per nessun orario.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-product')">Annulla</button>
+      <button class="btn btn-gold" onclick="saveProduct()">Salva prodotto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TEAM MEMBER -->
+<div class="modal-overlay" id="modal-member">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-member-title">Nuovo Membro</span>
+      <button class="btn-close" onclick="closeModal('modal-member')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" id="m-firstname" placeholder="Es. Marco">
+        </div>
+        <div class="form-group">
+          <label>Cognome *</label>
+          <input type="text" id="m-lastname" placeholder="Es. Rossi">
+        </div>
+        <div class="form-group">
+          <label>Telefono</label>
+          <input type="tel" id="m-phone" placeholder="+39 333 1234567">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="m-email" placeholder="marco@cilex.com">
+        </div>
+        <div class="form-group full">
+          <label>Ruolo *</label>
+          <select id="m-role">
+            <option value="">Seleziona ruolo...</option>
+            <option value="founder">Founder</option>
+            <option value="manager">Manager</option>
+            <option value="promoter-lg">Promoter LG</option>
+            <option value="promoter-spiaggia">Promoter Spiaggia</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Note</label>
+          <input type="text" id="m-notes" placeholder="Es. zona di lavoro, turno...">
+        </div>
+        <div class="form-group full">
+          <label>PIN accesso (4 cifre) — lascia vuoto per accesso diretto</label>
+          <input type="password" id="m-pin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-member')">Annulla</button>
+      <button class="btn btn-gold" onclick="saveMember()">Salva membro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BROADCAST -->
+<div class="modal-overlay" id="modal-broadcast">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Invia Notifica</span>
+      <button class="btn-close" onclick="closeModal('modal-broadcast')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group full">
+          <label>Titolo *</label>
+          <input type="text" id="bc-title" placeholder="Es. Riunione domani alle 9">
+        </div>
+        <div class="form-group full">
+          <label>Messaggio *</label>
+          <textarea id="bc-body" style="min-height:80px" placeholder="Testo della notifica..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Destinatari</label>
+          <select id="bc-target">
+            <option value="all">Tutti i Promoter</option>
+            <option value="superadmin">Solo Superadmin</option>
+          </select>
+        </div>
+        <div class="form-group full" id="bc-target-users-wrap" style="display:none">
+          <label>Utenti specifici</label>
+          <div id="bc-target-users" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px"></div>
+        </div>
+        <div class="form-group full">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="bc-specific-toggle" onchange="toggleBcSpecific()" style="width:auto">
+            <span style="font-size:12px">Invia solo a utenti specifici</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-broadcast')">Annulla</button>
+      <button class="btn btn-gold btn-sm" onclick="sendBroadcast()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8z"/></svg>
+        Invia
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRM -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">
+      <span class="modal-title">Conferma</span>
+      <button class="btn-close" onclick="closeModal('modal-confirm')">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-size:13px;color:var(--text2);line-height:1.6"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-confirm')">Annulla</button>
+      <button class="btn btn-danger btn-sm" id="confirm-action-btn">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOGOUT -->
+<div class="modal-overlay" id="modal-logout">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <span class="modal-title">Cambia utente</span>
+      <button class="btn-close" onclick="closeModal('modal-logout')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+        Vuoi uscire dal tuo profilo?<br>
+        Al prossimo accesso dovrai selezionare di nuovo il tuo utente.
+      </p>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;" id="logout-current-user-card">
+        <div class="team-avatar av-0" id="logout-av" style="width:36px;height:36px;font-size:13px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+        <div>
+          <div id="logout-name" style="font-size:13px;font-weight:600;color:var(--text)"></div>
+          <div id="logout-role" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-top:1px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-logout')">Annulla</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Esci
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- TAB BAR (mobile - built dynamically by buildNav) -->
+<nav class="tab-bar" id="tab-bar"></nav>
+
+<!-- Supabase JS SDK (UMD build — provides window.supabase.createClient) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- App configuration & Supabase client init (must come before state.js) -->
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+
+<!-- JavaScript modules (load order matters: state first, app last) -->
+<script src="js/state.js"></script>
+<script src="js/db.js"></script>
+<script src="js/email.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/bookings.js"></script>
+<script src="js/products.js"></script>
+<script src="js/team.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

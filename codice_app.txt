@@ -1,0 +1,3299 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Cilex Ibiza — Booking Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cyan: #3EC6D4;
+  --cyan-dark: #25A0AD;
+  --cyan-dim: rgba(62,198,212,0.12);
+  --cyan-border: rgba(62,198,212,0.25);
+  --bg: #0A0A0A;
+  --surface: #111111;
+  --surface2: #1A1A1A;
+  --surface3: #222222;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --text: #F0F0F0;
+  --text2: #888888;
+  --text3: #555555;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.06);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation; /* prevents double-tap zoom */
+}
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.sidebar-logo {
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px; font-weight: 800;
+  color: #fff; letter-spacing: 1px; text-transform: uppercase;
+}
+.logo-name span { color: var(--cyan); }
+.logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+.sidebar-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius);
+  color: var(--text2); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; background: none;
+  text-align: left; width: 100%; transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--cyan-dim); color: var(--cyan); border-left: 2px solid var(--cyan); padding-left: 10px; }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.sidebar-bottom {
+  padding: 12px 8px;
+  border-top: 1px solid var(--border);
+}
+.season-pill {
+  background: var(--cyan-dim); color: var(--cyan);
+  font-size: 11px; font-weight: 600; padding: 6px 12px;
+  border-radius: 20px; text-align: center; letter-spacing: 0.5px;
+  border: 1px solid var(--cyan-border); text-transform: uppercase;
+}
+
+/* ── MAIN ── */
+.main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text);
+}
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.page { padding: 24px; display: none; }
+.page.active { display: block; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius); font-size: 12px;
+  font-weight: 600; cursor: pointer; border: none;
+  font-family: 'Barlow', sans-serif; transition: all 0.15s;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.btn-gold { background: var(--cyan); color: #000; }
+.btn-gold:hover { background: var(--cyan-dark); }
+.btn-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text2); }
+.btn-outline:hover { background: var(--surface2); color: var(--text); }
+.btn-sm { padding: 5px 11px; font-size: 11px; }
+.btn-danger { background: rgba(239,68,68,0.12); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+.btn-primary { background: var(--cyan); color: #000; }
+.btn-primary:hover { background: var(--cyan-dark); }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); padding: 16px 18px;
+  border: 1px solid var(--border);
+}
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; }
+.stat-value { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+.stat-value.gold { color: var(--cyan); }
+.stat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 4px; color: var(--text3); }
+
+.money-toggle {
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); padding: 2px 4px; margin: -2px -4px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.money-toggle:hover { color: var(--cyan); background: var(--cyan-dim); }
+.money-toggle:active { transform: scale(0.92); }
+
+/* ── NOTIFICATIONS ── */
+.bell-btn {
+  position: relative;
+  width: 34px; height: 34px; border-radius: var(--radius);
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.bell-btn:hover { color: var(--cyan); border-color: var(--cyan-border); }
+.bell-btn.has-unread { color: var(--cyan); }
+.bell-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: #EF4444; color: #fff;
+  font-size: 9px; font-weight: 700; line-height: 16px;
+  border-radius: 8px; text-align: center;
+  border: 2px solid var(--surface);
+}
+.notif-panel {
+  display: none;
+  position: fixed; top: 54px; right: 14px;
+  width: 380px; max-width: calc(100vw - 28px);
+  max-height: 70vh;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 60px rgba(0,0,0,0.6);
+  z-index: 120;
+  flex-direction: column;
+  overflow: hidden;
+}
+.notif-panel.open { display: flex; }
+.notif-panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-panel-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text);
+}
+.notif-mini-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.notif-mini-btn:hover { color: var(--cyan); border-color: var(--cyan-border); }
+.notif-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+}
+.notif-tab {
+  flex: 1; padding: 9px 4px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s; font-family: 'Barlow', sans-serif;
+}
+.notif-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.notif-tab:hover:not(.active) { color: var(--text); }
+.notif-list {
+  flex: 1; overflow-y: auto; min-height: 100px;
+}
+.notif-date-group {
+  padding: 8px 16px 4px;
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  background: var(--surface2);
+}
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; gap: 11px; align-items: flex-start;
+  transition: background 0.15s;
+}
+.notif-item:hover { background: var(--surface2); }
+.notif-item.unread { background: rgba(62,198,212,0.04); }
+.notif-item.unread:hover { background: rgba(62,198,212,0.08); }
+.notif-item.unread .notif-title::before {
+  content: ''; display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--cyan); margin-right: 6px;
+  vertical-align: middle;
+}
+.notif-icon {
+  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.notif-icon.urgent { background: rgba(239,68,68,0.12); color: #F87171; }
+.notif-icon.warning { background: rgba(251,191,36,0.12); color: #FCD34D; }
+.notif-icon.message { background: rgba(62,198,212,0.12); color: var(--cyan); }
+.notif-icon.info { background: var(--surface3); color: var(--text2); }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.notif-text { font-size: 12px; color: var(--text2); line-height: 1.45; word-wrap: break-word; }
+.notif-time { font-size: 10px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.notif-empty { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 12px; }
+
+/* merged into main mobile media query above */
+
+/* ── CARD ── */
+.card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.card-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 1.2px;
+}
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 10px 16px; text-align: left;
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  font-size: 13px; color: var(--text); vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); cursor: pointer; }
+.td-name { font-weight: 600; }
+.td-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+.badge-confirmed { background: rgba(34,197,94,0.12); color: #4ADE80; border: 1px solid rgba(34,197,94,0.2); }
+.badge-pending { background: rgba(251,191,36,0.12); color: #FCD34D; border: 1px solid rgba(251,191,36,0.2); }
+.badge-cancelled { background: rgba(239,68,68,0.12); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
+
+/* ── FILTERS ── */
+.filters {
+  display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+}
+.filters input, .filters select {
+  font-size: 12px; padding: 7px 11px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--text);
+  font-family: 'Barlow', sans-serif; outline: none;
+}
+.filters input:focus, .filters select:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
+.filters input { min-width: 200px; }
+.filters select { min-width: 150px; }
+.filters select option { background: var(--surface2); }
+
+/* ── FORM ── */
+.form-wrap { max-width: 680px; }
+.form-section { margin-bottom: 22px; }
+.form-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--cyan);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--cyan-border);
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 9px 12px; font-size: 13px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface2); color: var(--text);
+  font-family: 'Barlow', sans-serif; outline: none; transition: border 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group select option { background: var(--surface2); }
+.form-actions {
+  display: flex; gap: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border); margin-top: 8px;
+}
+
+/* ── PRODUCTS PAGE ── */
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.product-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.product-img-area {
+  height: 110px; display: flex; align-items: center; justify-content: center;
+  font-size: 44px; position: relative; border-bottom: 1px solid var(--border);
+}
+.product-body { padding: 14px 16px; }
+.product-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; color: var(--text); }
+.product-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; min-height: 36px; }
+.product-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.product-price { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: var(--cyan); }
+.product-form { padding: 16px 18px; border-top: 1px solid var(--border); display: none; }
+.product-form.open { display: block; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 100;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  border: 1px solid var(--border-strong);
+  width: 560px; max-width: 95vw; max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.modal-body { padding: 18px 22px; }
+.modal-footer {
+  padding: 14px 22px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.btn-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 20px; line-height: 1; padding: 2px;
+}
+.btn-close:hover { color: var(--text); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--text3);
+}
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 13px; }
+
+/* ── NOTIFICATION ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface3); color: var(--text);
+  border: 1px solid var(--border-strong);
+  padding: 12px 18px; border-radius: var(--radius);
+  font-size: 13px; box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  z-index: 200; transform: translateY(80px); opacity: 0;
+  transition: all 0.3s; font-weight: 500;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: rgba(62,198,212,0.15); color: var(--cyan); border-color: var(--cyan-border); }
+.toast.error { background: rgba(239,68,68,0.12); color: #F87171; border-color: rgba(239,68,68,0.2); }
+
+/* ── DETAIL VIEW ── */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.detail-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; font-weight: 700; }
+.detail-value { font-size: 13px; font-weight: 500; color: var(--text); }
+.detail-full { grid-column: 1 / -1; }
+
+/* ── TEAM ── */
+.role-sections { display: flex; flex-direction: column; gap: 24px; }
+.role-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--cyan);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--cyan-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.role-count {
+  background: var(--cyan-dim); color: var(--cyan);
+  font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700;
+  border: 1px solid var(--cyan-border);
+}
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.team-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+  border: 1px solid var(--border);
+}
+.team-avatar {
+  width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+}
+.team-info { flex: 1; min-width: 0; }
+.team-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.team-role-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 7px;
+  border-radius: 4px; display: inline-block; margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.team-contact { font-size: 11px; color: var(--text3); line-height: 1.8; }
+.team-contact a { color: var(--text3); text-decoration: none; }
+.team-contact a:hover { color: var(--cyan); }
+.team-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid var(--border-strong); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-size: 12px; transition: all 0.15s;
+}
+.btn-icon:hover { background: var(--surface2); color: var(--text); }
+.btn-icon.danger:hover { background: rgba(239,68,68,0.1); color: #F87171; border-color: rgba(239,68,68,0.2); }
+
+/* role badge colors */
+.role-founder  { background: rgba(62,198,212,0.15); color: var(--cyan); border: 1px solid var(--cyan-border); }
+.role-manager  { background: rgba(34,197,94,0.1); color: #4ADE80; border: 1px solid rgba(34,197,94,0.2); }
+.role-promoter-lg { background: rgba(167,139,250,0.1); color: #A78BFA; border: 1px solid rgba(167,139,250,0.2); }
+.role-promoter-spiaggia { background: rgba(251,191,36,0.1); color: #FCD34D; border: 1px solid rgba(251,191,36,0.2); }
+.role-altro { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+/* avatar colors */
+.av-0 { background: rgba(62,198,212,0.18); color: var(--cyan); }
+.av-1 { background: rgba(34,197,94,0.15); color: #4ADE80; }
+.av-2 { background: rgba(167,139,250,0.15); color: #A78BFA; }
+.av-3 { background: rgba(251,191,36,0.15); color: #FCD34D; }
+.av-4 { background: rgba(239,68,68,0.15); color: #F87171; }
+.av-5 { background: rgba(249,115,22,0.15); color: #FB923C; }
+
+/* ── TAB BAR (mobile only) ── */
+.tab-bar { display: none; }
+
+@media (max-width: 768px) {
+  .mobile-bell-hidden { display: none !important; }
+  #export-csv-btn { display: none !important; }
+  .sidebar { display: none; }
+  .layout { flex-direction: column; min-height: 100vh; }
+  .main { padding-bottom: 70px; }
+  .topbar { padding: 0 16px; height: 50px; }
+  .page { padding: 14px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-value { font-size: 26px; }
+
+  /* iOS: prevent auto-zoom on input focus (requires font-size >= 16px) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  .card { overflow-x: auto; }
+  table { min-width: 480px; }
+  .filters { flex-direction: column; align-items: stretch; }
+  .filters input, .filters select { min-width: unset; width: 100%; }
+  .filters .btn { width: 100%; justify-content: center; margin-left: 0 !important; }
+  .form-wrap { max-width: 100%; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .form-actions { flex-direction: column; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+  .products-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; }
+  .modal-overlay { align-items: flex-end; }
+  .modal { width: 100%; max-width: 100%; max-height: 92vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: none; }
+  .modal-body { padding: 14px 16px; }
+  .modal-header { padding: 14px 16px 12px; }
+  .modal-footer { padding: 10px 16px; flex-direction: column-reverse; }
+  .modal-footer .btn { width: 100%; justify-content: center; }
+  .toast { bottom: 82px; right: 12px; left: 12px; text-align: center; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-full { grid-column: 1; }
+  .notif-panel {
+    position: fixed; top: 0; right: 0; left: 0; bottom: 0;
+    width: 100vw; max-width: 100vw; max-height: 100vh;
+    border-radius: 0; border: none;
+  }
+
+  .tab-bar {
+    display: flex;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; border: none; background: none;
+    cursor: pointer; color: var(--text3);
+    font-family: 'Barlow', sans-serif;
+    font-size: 9px; font-weight: 600;
+    padding: 8px 4px; transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .tab-item svg {
+    width: 20px; height: 20px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .tab-item.active { color: var(--cyan); }
+  .tab-item.tab-add .tab-add-icon {
+    width: 38px; height: 38px;
+    background: var(--cyan); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0;
+  }
+  .tab-item.tab-add .tab-add-icon svg { width: 18px; height: 18px; stroke: #000; stroke-width: 2.5; }
+  .tab-item.tab-add span { font-size: 9px; color: var(--text3); margin-top: 2px; }
+}
+
+/* ── DASHBOARD PROFILE HEADER ── */
+.dash-profile-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 18px;
+}
+.dash-profile-left { display: flex; align-items: center; gap: 16px; }
+.dash-avatar-wrap {
+  position: relative; width: 60px; height: 60px; flex-shrink: 0;
+  border-radius: 16px; overflow: hidden; cursor: pointer;
+  border: 2px solid var(--border-strong); transition: border-color 0.15s;
+}
+.dash-avatar-wrap:hover { border-color: var(--cyan-border); }
+.dash-avatar, .dash-avatar-img {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+}
+.dash-avatar {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800;
+}
+.dash-avatar-img { object-fit: cover; position: absolute; inset: 0; }
+.dash-avatar-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.dash-avatar-wrap:hover .dash-avatar-overlay { opacity: 1; }
+.dash-profile-info { display: flex; flex-direction: column; gap: 3px; }
+.dash-greeting { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+.dash-name { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: 0.5px; text-transform: uppercase; }
+.dash-role-badge { display: inline-flex; align-items: center; margin-top: 2px; }
+.dash-role-badge span {
+  font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .dash-profile-header { padding: 14px; margin-bottom: 14px; }
+  .dash-avatar-wrap { width: 52px; height: 52px; border-radius: 13px; }
+  .dash-name { font-size: 22px; }
+}
+
+/* ── LOGIN SCREEN ── */
+.login-screen {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px;
+}
+.login-screen::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--cyan);
+}
+.login-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 42px; font-weight: 800;
+  color: #fff; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 4px; line-height: 1;
+}
+.login-logo span { color: var(--cyan); }
+.login-sub { font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 44px; }
+.login-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; font-weight: 700; }
+.login-search-wrap { position: relative; width: 100%; max-width: 340px; margin-bottom: 12px; }
+.login-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.login-search {
+  width: 100%; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); padding: 11px 14px 11px 38px;
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.15s;
+}
+.login-search::placeholder { color: var(--text3); }
+.login-search:focus { border-color: var(--cyan-border); }
+.login-users { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 340px; max-height: 60vh; overflow-y: auto; }
+.login-field-wrap { display: flex; flex-direction: column; }
+.login-field-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 7px; }
+.login-field {
+  width: 100%; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); padding: 12px 42px 12px 14px;
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px;
+  outline: none; transition: border-color 0.15s;
+}
+.login-field::placeholder { color: var(--text3); }
+.login-field:focus { border-color: var(--cyan-border); }
+.la-suggestion-item {
+  padding: 11px 14px; cursor: pointer; font-size: 14px; color: var(--text);
+  font-family: 'Barlow', sans-serif; transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+.la-suggestion-item:last-child { border-bottom: none; }
+.la-suggestion-item:hover, .la-suggestion-item.highlighted { background: var(--surface3); }
+.la-suggestion-item .la-sug-role { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.btn-ghost { background: none; border: 1px solid transparent; }
+.btn-ghost:hover { border-color: var(--border); background: var(--surface2); }
+.login-user-btn {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); padding: 13px 16px;
+  cursor: pointer; width: 100%; transition: all 0.15s;
+  font-family: 'Barlow', sans-serif;
+}
+.login-user-btn:hover { background: var(--surface2); border-color: var(--cyan-border); }
+.login-avatar {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800;
+}
+.login-user-info { text-align: left; }
+.login-user-name { font-size: 14px; font-weight: 600; color: #fff; }
+.login-user-role { font-size: 10px; color: var(--text3); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+.login-pin-screen { display: none; width: 100%; max-width: 300px; }
+.login-pin-screen.active { display: block; }
+.login-users.hidden { display: none; }
+.pin-back { background: none; border: none; color: var(--text3); font-size: 11px; cursor: pointer; margin-bottom: 24px; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; padding: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.pin-back:hover { color: var(--text); }
+.pin-who { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
+.pin-hint { font-size: 11px; color: var(--text3); margin-bottom: 28px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pin-dots { display: flex; gap: 14px; justify-content: center; margin-bottom: 28px; }
+.pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border-strong); transition: all 0.15s; }
+.pin-dot.filled { background: var(--cyan); border-color: var(--cyan); }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pin-key {
+  aspect-ratio: 1; border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  color: #fff; font-size: 22px; font-weight: 300;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s; font-family: 'Barlow', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.pin-key:active { background: var(--cyan-dim); border-color: var(--cyan-border); transform: scale(0.94); }
+.pin-key.del { font-size: 14px; font-weight: 500; }
+.pin-key.empty { background: transparent; border: none; cursor: default; }
+.pin-error { text-align: center; font-size: 11px; color: #F87171; margin-top: 14px; min-height: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Topbar user pill */
+.user-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface2); border-radius: 8px;
+  padding: 4px 10px 4px 5px; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  border: 1px solid var(--border); font-family: 'Barlow', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.user-pill:hover { border-color: var(--cyan-border); color: var(--cyan); }
+.user-pill-av {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 800;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ── TOGGLE SWITCH ── */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 12px;
+  background: var(--surface3); border: 1px solid var(--border-strong);
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle-switch input:checked + .toggle-track { background: var(--cyan); border-color: var(--cyan); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text3); transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked + .toggle-track .toggle-thumb { transform: translateX(20px); background: #000; }
+
+/* ── PERIOD TABS ── */
+.period-tabs {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 3px; width: fit-content;
+}
+.period-tab {
+  padding: 6px 14px; border-radius: 6px; font-size: 11px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  border: none; background: none; color: var(--text3);
+  cursor: pointer; transition: all 0.15s; font-family: 'Barlow', sans-serif;
+}
+.period-tab.active { background: var(--cyan); color: #000; }
+.period-tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+/* ── URGENT BANNERS ── */
+.urgent-section { margin-bottom: 20px; }
+.urgent-banners-header {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.urgent-count-pill {
+  background: rgba(239,68,68,0.15); color: #F87171;
+  font-size: 10px; padding: 1px 7px; border-radius: 10px;
+  border: 1px solid rgba(239,68,68,0.2); font-weight: 700;
+}
+.urgent-banner {
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
+  border: 1px solid; cursor: pointer; transition: opacity 0.15s;
+}
+.urgent-banner:hover { opacity: 0.85; }
+.urgent-banner.critical { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.2); }
+.urgent-banner.warning  { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.2); }
+.urgent-banner-icon { font-size: 22px; flex-shrink: 0; line-height: 1.2; }
+.urgent-banner-body { flex: 1; min-width: 0; }
+.urgent-banner-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.urgent-banner.critical .urgent-banner-title { color: #F87171; }
+.urgent-banner.warning  .urgent-banner-title { color: #FCD34D; }
+.urgent-banner-sub { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.urgent-banner-meta { font-size: 11px; color: var(--text3); margin-top: 5px; display: flex; gap: 12px; flex-wrap: wrap; }
+.urgent-banner-badge { display: inline-flex; align-items: center; gap: 4px; }
+.urgent-banners-hint {
+  font-size: 11px; color: var(--text2); margin-bottom: 12px;
+  padding: 6px 10px; background: rgba(62,198,212,0.06);
+  border-left: 2px solid var(--cyan); border-radius: 0 4px 4px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo">Cilex <span>Ibiza</span></div>
+  <div class="login-sub">Booking Manager</div>
+
+  <!-- PROMOTER login: nome + password -->
+  <div id="login-promoter-panel" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:20px">Accedi al tuo account</div>
+    <div class="login-field-wrap">
+      <label class="login-field-label">Nome utente</label>
+      <input class="login-field" id="lp-username" type="text" placeholder="Es. Marco La Fata" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')document.getElementById('lp-password').focus()">
+    </div>
+    <div class="login-field-wrap" style="margin-top:12px">
+      <label class="login-field-label">Password</label>
+      <div style="position:relative">
+        <input class="login-field" id="lp-password" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doPromoterLogin()">
+        <button onclick="togglePwdVisibility()" id="lp-eye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text3)">
+          <svg id="lp-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pin-error" id="lp-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="doPromoterLogin()">Accedi</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showSuperadminLogin()">Accesso manager →</button>
+  </div>
+
+  <!-- SUPERADMIN login: password + campo nome profilo da impersonare -->
+  <div id="login-admin-panel" style="width:100%;max-width:340px;display:none;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:20px">Accesso Manager</div>
+    <div class="login-field-wrap">
+      <label class="login-field-label">Password Manager</label>
+      <div style="position:relative">
+        <input class="login-field" id="la-password" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminAuth()">
+        <button onclick="toggleAdminPwdVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text3)">
+          <svg id="la-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pin-error" id="la-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="doAdminAuth()">Verifica password</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showPromoterLogin()">← Torna all'accesso normale</button>
+  </div>
+
+  <!-- SUPERADMIN impersona: schermata post-autenticazione -->
+  <div id="login-admin-select" style="width:100%;max-width:340px;display:none;flex-direction:column;gap:0">
+    <div class="login-label" style="margin-bottom:6px">Accedi come</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:18px;text-transform:uppercase;letter-spacing:0.5px">Scrivi il nome del profilo</div>
+    <div class="login-field-wrap" style="position:relative">
+      <input class="login-field" id="la-profile" type="text" placeholder="Tocca per vedere i profili" autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterAdminProfiles(this.value)" onfocus="showAdminProfileList()" onkeydown="handleAdminProfileKey(event)">
+    </div>
+    <div id="la-suggestions" style="display:none;background:var(--surface2);border:1px solid var(--border-strong);border-radius:var(--radius-lg);margin-top:6px;overflow-y:auto;max-height:280px"></div>
+    <div class="pin-error" id="la-select-error" style="text-align:left;margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px" onclick="doAdminSelectLogin()">Accedi</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;color:var(--text3)" onclick="showPromoterLogin()">← Logout manager</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">CILEX <span>IBIZA</span></div>
+      <div class="logo-sub">Booking Manager</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Built dynamically by buildNav() after login -->
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="season-pill">☀️ Stagione 2026</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <div class="topbar-actions">
+        <!-- Notifications bell -->
+        <button class="bell-btn" id="bell-btn" onclick="toggleNotifPanel()" aria-label="Notifiche">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="bell-badge" id="bell-badge" style="display:none">0</span>
+        </button>
+        <button class="user-pill" id="topbar-user-pill" onclick="toggleUserDropdown()">
+          <div class="user-pill-av av-0" id="topbar-av"></div>
+          <span id="topbar-user-name">—</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <!-- User dropdown -->
+        <div id="user-dropdown" style="display:none;position:fixed;top:50px;right:12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(0,0,0,0.5);min-width:200px;z-index:150;overflow:hidden;max-width:calc(100vw - 24px);">
+          <div style="padding:14px 16px 12px;border-bottom:1px solid var(--border);">
+            <div id="dd-name" style="font-weight:600;font-size:14px;color:var(--text)"></div>
+            <div id="dd-role" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px"></div>
+          </div>
+          <div style="padding:6px;">
+            <button onclick="switchUser()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;background:none;border:none;border-radius:var(--radius);color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--text2)'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Cambia utente
+            </button>
+            <button onclick="logout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;background:none;border:none;border-radius:var(--radius);color:#F87171;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="export-csv-btn" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Esporta CSV
+        </button>
+
+        <!-- Notification panel -->
+        <div id="notif-panel" class="notif-panel">
+          <div class="notif-panel-header">
+            <span class="notif-panel-title">Notifiche</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button id="notif-broadcast-btn" onclick="openBroadcastModal()" class="notif-mini-btn" style="display:none" title="Invia messaggio">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8z"/></svg>
+              </button>
+              <button class="notif-mini-btn" onclick="markAllRead()" title="Segna tutte come lette">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button class="btn-close" onclick="closeNotifPanel()">×</button>
+            </div>
+          </div>
+          <div class="notif-tabs">
+            <button class="notif-tab active" data-filter="all" onclick="setNotifFilter('all')">Tutte</button>
+            <button class="notif-tab" data-filter="unread" onclick="setNotifFilter('unread')">Non lette</button>
+            <button class="notif-tab" data-filter="system" onclick="setNotifFilter('system')">Sistema</button>
+            <button class="notif-tab" data-filter="message" onclick="setNotifFilter('message')">Messaggi</button>
+          </div>
+          <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+            <input type="text" id="notif-search" placeholder="Cerca nelle notifiche..." oninput="setNotifSearch(this.value)" style="width:100%;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none">
+          </div>
+          <div id="notif-list" class="notif-list"></div>
+        </div>
+      </div>
+    </div>
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <!-- PROFILE HEADER -->
+      <div class="dash-profile-header" id="dash-profile-header">
+        <div class="dash-profile-left">
+          <div class="dash-avatar-wrap" onclick="triggerProfileImageUpload()" title="Cambia foto profilo">
+            <div class="dash-avatar" id="dash-avatar-initials"></div>
+            <img class="dash-avatar-img" id="dash-avatar-img" src="" alt="" style="display:none">
+            <div class="dash-avatar-overlay">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 0 2-2l2-3h10l2 3a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <input type="file" id="profile-img-input" accept="image/*" style="display:none" onchange="onProfileImageSelected(event)">
+          </div>
+          <div class="dash-profile-info">
+            <div class="dash-greeting" id="dash-greeting">Buongiorno</div>
+            <div class="dash-name" id="dash-name">—</div>
+            <div class="dash-role-badge" id="dash-role-badge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URGENT BANNERS (promoter only) -->
+      <div id="urgent-banners"></div>
+
+      <!-- PERIOD FILTER (promoter only) -->
+      <div id="period-filter-wrap"></div>
+
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="dashboard-table-title">Booking recenti</span>
+          <button class="btn btn-outline btn-sm" onclick="showPage('bookings', null)">Vedi tutti</button>
+        </div>
+        <div id="dashboard-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="page" id="page-bookings">
+      <div class="filters">
+        <input type="text" id="search-input" placeholder="Cerca cliente, email, prodotto..." oninput="renderBookingsTable()">
+        <select id="filter-status" onchange="renderBookingsTable()">
+          <option value="">Tutti gli stati</option>
+          <option value="confirmed">Confermato</option>
+          <option value="pending">In attesa</option>
+          <option value="cancelled">Cancellato</option>
+        </select>
+        <select id="filter-product" onchange="renderBookingsTable()">
+          <option value="">Tutti i prodotti</option>
+        </select>
+        <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="showPage('new-booking', null)">
+          + Nuova Prenotazione
+        </button>
+      </div>
+      <div class="card">
+        <div id="bookings-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- NEW BOOKING / EDIT -->
+    <div class="page" id="page-new-booking">
+      <div class="form-wrap">
+        <div class="card" style="padding: 24px">
+          <input type="hidden" id="edit-id">
+
+          <div class="form-section">
+            <div class="form-section-title">Dati cliente</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nome e cognome *</label>
+                <input type="text" id="f-name">
+              </div>
+              <div class="form-group">
+                <label>Telefono *</label>
+                <div style="display:flex">
+                  <select id="f-phone-prefix" style="width:118px;flex-shrink:0;border-radius:var(--radius) 0 0 var(--radius);border-right:none;font-size:12px;padding-left:7px">
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+31">🇳🇱 +31</option>
+                    <option value="+32">🇧🇪 +32</option>
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+43">🇦🇹 +43</option>
+                    <option value="+351">🇵🇹 +351</option>
+                    <option value="+30">🇬🇷 +30</option>
+                    <option value="+48">🇵🇱 +48</option>
+                    <option value="+36">🇭🇺 +36</option>
+                    <option value="+40">🇷🇴 +40</option>
+                    <option value="+7">🇷🇺 +7</option>
+                    <option value="+380">🇺🇦 +380</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+81">🇯🇵 +81</option>
+                    <option value="+82">🇰🇷 +82</option>
+                    <option value="+86">🇨🇳 +86</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+212">🇲🇦 +212</option>
+                    <option value="+27">🇿🇦 +27</option>
+                  </select>
+                  <input type="tel" id="f-phone" inputmode="numeric" style="flex:1;border-radius:0 var(--radius) var(--radius) 0">
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>Email *</label>
+                <input type="email" id="f-email">
+              </div>
+              <div class="form-group">
+                <label>Lingua</label>
+                <select id="f-language">
+                  <option value="">—</option>
+                  <option>Italiano</option>
+                  <option>Inglese</option>
+                  <option>Spagnolo</option>
+                  <option>Francese</option>
+                  <option>Tedesco</option>
+                  <option>Altro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Dettagli prodotto</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Prodotto *</label>
+                <select id="f-product" onchange="onProductChange()">
+                  <option value="">Seleziona prodotto...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Numero persone *</label>
+                <input type="number" id="f-pax" min="1" value="1" oninput="recalcTotal()">
+              </div>
+              <div class="form-group">
+                <label>Data evento</label>
+                <input type="date" id="f-date">
+              </div>
+              <div class="form-group">
+                <label>Orario incontro</label>
+                <select id="f-time">
+                  <option value="">— Seleziona prima il prodotto —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Agente</label>
+                <input type="text" id="f-agent" readonly style="background:var(--surface3);color:var(--text3);cursor:default;border-color:var(--border)">
+              </div>
+              <div class="form-group">
+                <label>Posizione vendita</label>
+                <select id="f-location">
+                  <option value="">—</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Pagamento</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Metodo di pagamento</label>
+                <select id="f-payment-method" onchange="recalcTotal()">
+                  <option value="">—</option>
+                  <option>Contanti</option>
+                  <option>Carta di credito</option>
+                  <option>Bonifico bancario</option>
+                  <option>PayPal</option>
+                  <option>Satispay</option>
+                  <option>Revolut</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Stato pagamento</label>
+                <div id="f-payment-status-display" style="padding:9px 12px;font-size:13px;border-radius:var(--radius);background:var(--surface2);border:1px solid var(--border-strong);display:flex;align-items:center;gap:8px;">
+                  <span class="badge badge-pending">In attesa</span>
+                  <span style="font-size:11px;color:var(--text3)">Calcolato automaticamente</span>
+                </div>
+                <input type="hidden" id="f-payment-status" value="pending">
+              </div>
+              <div class="form-group">
+                <label>Prezzo totale (€)</label>
+                <input type="number" id="f-total" step="0.01" min="0" readonly style="background:var(--surface3);color:var(--cyan);cursor:default;border-color:var(--border);font-weight:600" placeholder="0.00">
+                <div id="f-surcharge-note" style="display:none;margin-top:6px;font-size:11px;color:#FCD34D;align-items:center;gap:5px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span id="f-surcharge-text"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Acconto ricevuto (€)</label>
+                <input type="number" id="f-deposit" step="0.01" min="0" placeholder="0.00" oninput="recalcStatus()">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Note</div>
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Note interne</label>
+                <textarea id="f-notes"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-gold" onclick="saveBooking()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salva prenotazione
+            </button>
+            <button class="btn btn-outline" onclick="clearForm()">Cancella campi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px">
+        <button class="btn btn-gold" onclick="openAddProduct()">+ Aggiungi prodotto</button>
+      </div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="page" id="page-team">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:20px">
+        <button class="btn btn-gold" onclick="openAddMember()">+ Aggiungi membro</button>
+      </div>
+      <div class="role-sections" id="team-sections"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div id="settings-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Dettaglio Prenotazione</span>
+      <button class="btn-close" onclick="closeModal('modal-detail')">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="modal-delete-btn">Elimina</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-detail')">Chiudi</button>
+      <button class="btn btn-gold btn-sm" id="modal-edit-btn">Modifica</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD PRODUCT -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-product-title">Nuovo Prodotto</span>
+      <button class="btn-close" onclick="closeModal('modal-product')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Nome prodotto *</label>
+        <input type="text" id="p-name" placeholder="Es. Open Bar">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Descrizione</label>
+        <textarea id="p-desc" placeholder="Descrizione del prodotto..." style="min-height:70px"></textarea>
+      </div>
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group">
+          <label>Prezzo base (€/pers.)</label>
+          <input type="number" id="p-price" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Emoji / Icona</label>
+          <input type="text" id="p-emoji" placeholder="🍹" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label>Colore sfondo</label>
+          <input type="color" id="p-color" value="#FFF8ED">
+        </div>
+        <div class="form-group">
+          <label>Commissione promoter (%)</label>
+          <input type="number" id="p-commission" placeholder="Es. 10" step="0.5" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label>Durata</label>
+          <input type="text" id="p-duration" placeholder="Es. 4 ore, tutto il giorno">
+        </div>
+        <div class="form-group full">
+          <label>Note prodotto (per email)</label>
+          <textarea id="p-notes" placeholder="Info utili da includere nell'email di conferma..." style="min-height:60px"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Fasce orarie disponibili</label>
+          <textarea id="p-timeslots" placeholder="Una fascia per riga, es:&#10;21:00 - 00:00&#10;22:00 - 01:00&#10;23:00 - 02:00" style="min-height:90px;font-family:monospace;font-size:12px"></textarea>
+          <span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">Una fascia oraria per riga. Lascia vuoto per nessun orario.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-product')">Annulla</button>
+      <button class="btn btn-gold" onclick="saveProduct()">Salva prodotto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TEAM MEMBER -->
+<div class="modal-overlay" id="modal-member">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-member-title">Nuovo Membro</span>
+      <button class="btn-close" onclick="closeModal('modal-member')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" id="m-firstname" placeholder="Es. Marco">
+        </div>
+        <div class="form-group">
+          <label>Cognome *</label>
+          <input type="text" id="m-lastname" placeholder="Es. Rossi">
+        </div>
+        <div class="form-group">
+          <label>Telefono</label>
+          <input type="tel" id="m-phone" placeholder="+39 333 1234567">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="m-email" placeholder="marco@cilex.com">
+        </div>
+        <div class="form-group full">
+          <label>Ruolo *</label>
+          <select id="m-role">
+            <option value="">Seleziona ruolo...</option>
+            <option value="founder">Founder</option>
+            <option value="manager">Manager</option>
+            <option value="promoter-lg">Promoter LG</option>
+            <option value="promoter-spiaggia">Promoter Spiaggia</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Note</label>
+          <input type="text" id="m-notes" placeholder="Es. zona di lavoro, turno...">
+        </div>
+        <div class="form-group full">
+          <label>PIN accesso (4 cifre) — lascia vuoto per accesso diretto</label>
+          <input type="password" id="m-pin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-member')">Annulla</button>
+      <button class="btn btn-gold" onclick="saveMember()">Salva membro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BROADCAST (superadmin sends notification) -->
+<div class="modal-overlay" id="modal-broadcast">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Invia Notifica</span>
+      <button class="btn-close" onclick="closeModal('modal-broadcast')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="gap:12px">
+        <div class="form-group full">
+          <label>Titolo *</label>
+          <input type="text" id="bc-title" placeholder="Es. Riunione domani alle 9">
+        </div>
+        <div class="form-group full">
+          <label>Messaggio *</label>
+          <textarea id="bc-body" style="min-height:80px" placeholder="Testo della notifica..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Destinatari</label>
+          <select id="bc-target">
+            <option value="all">Tutti i Promoter</option>
+            <option value="superadmin">Solo Superadmin</option>
+          </select>
+        </div>
+        <div class="form-group full" id="bc-target-users-wrap" style="display:none">
+          <label>Utenti specifici</label>
+          <div id="bc-target-users" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px"></div>
+        </div>
+        <div class="form-group full">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="bc-specific-toggle" onchange="toggleBcSpecific()" style="width:auto">
+            <span style="font-size:12px">Invia solo a utenti specifici</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-broadcast')">Annulla</button>
+      <button class="btn btn-gold btn-sm" onclick="sendBroadcast()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8z"/></svg>
+        Invia
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRM (generic delete) -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">
+      <span class="modal-title">Conferma</span>
+      <button class="btn-close" onclick="closeModal('modal-confirm')">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-size:13px;color:var(--text2);line-height:1.6"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-confirm')">Annulla</button>
+      <button class="btn btn-danger btn-sm" id="confirm-action-btn">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOGOUT -->
+<div class="modal-overlay" id="modal-logout">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <span class="modal-title">Cambia utente</span>
+      <button class="btn-close" onclick="closeModal('modal-logout')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+        Vuoi uscire dal tuo profilo?<br>
+        Al prossimo accesso dovrai selezionare di nuovo il tuo utente.
+      </p>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;" id="logout-current-user-card">
+        <div class="team-avatar av-0" id="logout-av" style="width:36px;height:36px;font-size:13px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+        <div>
+          <div id="logout-name" style="font-size:13px;font-weight:600;color:var(--text)"></div>
+          <div id="logout-role" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-top:1px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-logout')">Annulla</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Esci
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────
+const DEFAULT_PRODUCTS = [
+  { id: 'p1', name: 'Open Bar', desc: 'Accesso illimitato al bar con drink inclusi per tutta la serata.', price: 35, emoji: '🍹', color: '#FFF8ED', duration: 'Serata', notes: '' },
+  { id: 'p2', name: 'Escursione Formentera', desc: 'Gita in barca verso Formentera con snorkeling e pranzo incluso.', price: 65, emoji: '⛵', color: '#EDF5FF', duration: 'Tutto il giorno', notes: '' },
+  { id: 'p3', name: 'Cena Spettacolo', desc: 'Cena di gala con show di intrattenimento live incluso.', price: 90, emoji: '🎭', color: '#F0EDFF', duration: '3 ore', notes: '' },
+  { id: 'p4', name: 'Pranzo Cala Bassa', desc: 'Pranzo esclusivo con vista panoramica sulla baia di Cala Bassa.', price: 55, emoji: '🏖️', color: '#EDFAF0', duration: '2 ore', notes: '' },
+  { id: 'p5', name: 'Boat Party', desc: 'Festa in barca con DJ set, open bar e tramonto sull\'isola.', price: 75, emoji: '🚢', color: '#FFF0F0', duration: '4 ore', notes: '' },
+];
+
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// ─── ALL APP STATE (declared upfront to avoid TDZ) ───────────────
+let bookings = load('cilex_bookings', []);
+let products = load('cilex_products', DEFAULT_PRODUCTS);
+let team = load('cilex_team', []);
+
+// Auto-ensure admin user exists in team (so admin login works even on fresh install)
+(function ensureAdminInTeam() {
+  const adminExists = team.find(m => 
+    ((m.firstname || '') + ' ' + (m.lastname || '')).trim().toLowerCase() === 'ignazio lanza'
+  );
+  if (!adminExists) {
+    team.unshift({
+      id: 'admin-ignazio',
+      firstname: 'Ignazio',
+      lastname: 'Lanza',
+      role: 'manager',
+      phone: '',
+      email: '',
+      notes: 'Amministratore',
+      pin: ''
+    });
+    save('cilex_team', team);
+  }
+})();
+
+let currentUser = load('cilex_current_user', null);
+let locations = load('cilex_locations', ['Cala Comte', 'Playa d\'en Bossa', 'Ibiza Town', 'San Antonio', 'Talamanca']);
+let notifications = load('cilex_notifications', []);
+let notifReadMap = load('cilex_notif_read', {}); // { userId: [notifId, ...] }
+let notifFilter = 'all'; // all | unread | system | message
+let notifSearch = '';
+let notifPanelOpen = false;
+let editingProductId = null;
+let editingMemberId = null;
+let pinTarget = null;
+let pinBuffer = '';
+let dropdownOpen = false;
+
+// ─── PERMISSIONS ─────────────────────────────────────────────────
+const SUPERADMIN_ROLES = ['manager'];
+
+// Default permission settings (editable by superadmin)
+const DEFAULT_PERMS = {
+  canViewAllBookings:  { label: 'Vedi tutti i booking',       promoter: false },
+  canDeleteBooking:    { label: 'Elimina booking',            promoter: false },
+  canEditBooking:      { label: 'Modifica booking altrui',    promoter: false },
+  canViewTeam:         { label: 'Vedi sezione Team',          promoter: false },
+  canViewProducts:     { label: 'Vedi sezione Prodotti',      promoter: true  },
+  canViewStats:        { label: 'Vedi statistiche dashboard', promoter: false },
+  canExportCSV:        { label: 'Esporta CSV',                promoter: false },
+};
+
+function loadPerms() {
+  const saved = load('cilex_perms', null);
+  if (!saved) return DEFAULT_PERMS;
+  // Migrate old 'staff' key to 'promoter'
+  const migrated = {};
+  for (const [key, def] of Object.entries(DEFAULT_PERMS)) {
+    if (saved[key] !== undefined) {
+      const val = saved[key];
+      migrated[key] = {
+        label: def.label,
+        promoter: val.promoter !== undefined ? val.promoter : (val.staff !== undefined ? val.staff : def.promoter)
+      };
+    } else {
+      migrated[key] = { ...def };
+    }
+  }
+  return migrated;
+}
+
+function isSuperAdmin() {
+  return currentUser && SUPERADMIN_ROLES.includes(currentUser.role);
+}
+
+function can(key) {
+  if (isSuperAdmin()) return true;
+  const perms = loadPerms();
+  return perms[key]?.promoter === true;
+}
+
+// Role labels (used by login + team + dropdown)
+const ROLE_LABELS = {
+  'founder': 'Founder', 'manager': 'Manager',
+  'promoter-lg': 'Team LG', 'promoter-spiaggia': 'Team Spiaggia', 'altro': 'Altro'
+};
+const AV_CLASSES = ['av-0','av-1','av-2','av-3','av-4','av-5'];
+
+function buildNav() {
+  const sa = isSuperAdmin();
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>' },
+    { id: 'bookings', label: sa ? 'Booking' : 'I Miei Booking', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+    { id: 'new-booking', label: 'Nuova Prenotazione', icon: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
+    can('canViewProducts') ? { id: 'products', label: 'Prodotti', icon: '<path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8l-2 4h12l-2-4z"/>' } : null,
+    can('canViewTeam') ? { id: 'team', label: 'Team', icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' } : null,
+    sa ? { id: 'settings', label: 'Impostazioni', icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' } : null,
+  ].filter(Boolean);
+
+  // Sidebar
+  const sideNav = document.getElementById('sidebar-nav');
+  if (sideNav) {
+    sideNav.innerHTML = navItems.map(item => `
+      <button class="nav-item" id="nav-${item.id}" onclick="showPage('${item.id}', this)">
+        <svg viewBox="0 0 24 24">${item.icon}</svg>
+        ${item.label}
+      </button>`).join('');
+  }
+
+  // Tab bar (mobile) — differenziata per ruolo
+  const tabBar = document.getElementById('tab-bar');
+  if (tabBar) {
+    // Tab fisse comuni: Home, Booking, +, Prodotti
+    const commonTabs = [
+      { id: 'dashboard', label: 'Home', icon: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>' },
+      { id: 'bookings', label: 'Booking', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+      { id: 'new-booking', label: 'Nuovo', icon: '' },
+    ];
+    if (can('canViewProducts')) commonTabs.push({ id: 'products', label: 'Prodotti', icon: '<path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8l-2 4h12l-2-4z"/>' });
+
+    // 5° tab: SuperAdmin → Team | Utente → Notifiche
+    if (sa) {
+      commonTabs.push({ id: 'team', label: 'Team', icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' });
+    } else {
+      commonTabs.push({ id: 'notifications-tab', label: 'Notifiche', icon: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', isNotif: true });
+    }
+
+    tabBar.innerHTML = commonTabs.map((item) => {
+      if (item.id === 'new-booking') return `
+        <button class="tab-item tab-add" id="tab-new-booking" onclick="showPage('new-booking', this)">
+          <div class="tab-add-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+          <span>Nuovo</span>
+        </button>`;
+      if (item.isNotif) return `
+        <button class="tab-item" id="tab-notifications-tab" onclick="toggleNotifPanel()" style="position:relative">
+          <svg viewBox="0 0 24 24">${item.icon}</svg>
+          <span class="tab-notif-badge" id="tab-notif-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);background:#EF4444;color:#fff;font-size:8px;font-weight:800;min-width:14px;height:14px;border-radius:7px;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+          ${item.label}
+        </button>`;
+      return `
+        <button class="tab-item" id="tab-${item.id}" onclick="showPage('${item.id}', this)">
+          <svg viewBox="0 0 24 24">${item.icon}</svg>
+          ${item.label}
+        </button>`;
+    }).join('');
+  }
+
+  // Export CSV button: only if allowed
+  const exportBtn = document.getElementById('export-csv-btn');
+  if (exportBtn) exportBtn.style.display = can('canExportCSV') ? '' : 'none';
+
+  // Su mobile, la campanella è nella tab bar per gli utenti non-SA
+  const bellBtn = document.getElementById('bell-btn');
+  if (bellBtn) bellBtn.classList.toggle('mobile-bell-hidden', !sa);
+}
+
+function showPage(id, navEl) {
+  // Permission guard
+  if (id === 'team' && !can('canViewTeam')) { showToast('Accesso non autorizzato', 'error'); return; }
+  if (id === 'products' && !can('canViewProducts')) { showToast('Accesso non autorizzato', 'error'); return; }
+  if (id === 'settings' && !isSuperAdmin()) { showToast('Accesso non autorizzato', 'error'); return; }
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(n => n.classList.remove('active'));
+
+  const page = document.getElementById('page-' + id);
+  if (!page) return;
+  page.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  // Always set both sidebar and tab bar active state
+  const tabEl = document.getElementById('tab-' + id);
+  if (tabEl) tabEl.classList.add('active');
+  const sideEl = document.getElementById('nav-' + id);
+  if (sideEl) sideEl.classList.add('active');
+  // If navEl was passed but wasn't tab/sidebar, still mark corresponding elements
+  if (navEl && navEl !== tabEl && navEl !== sideEl) {
+    // navEl already added above, sidebar/tab still covered
+  }
+
+  const titles = { 'dashboard':'Dashboard', 'bookings': isSuperAdmin() ? 'Tutti i Booking' : 'I Miei Booking', 'new-booking':'Nuova Prenotazione', 'products':'Prodotti', 'team':'Team', 'settings':'Impostazioni' };
+  document.getElementById('topbar-title').textContent = titles[id] || '';
+
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'bookings') { renderBookingsTable(); populateProductFilter(); }
+  if (id === 'new-booking') { populateProductSelect(); populateLocationSelect(); clearForm(); }
+  if (id === 'products') renderProducts();
+  if (id === 'team') renderTeam();
+  if (id === 'settings') renderSettings();
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────
+let dashPeriod = 'today'; // today | 3days | week | month
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────
+// type: 'system-urgent' | 'system-warning' | 'system-info' | 'message'
+// audience: 'all' | 'superadmin' | array of user IDs
+function pushNotif(notif) {
+  const n = {
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2,6),
+    createdAt: new Date().toISOString(),
+    type: 'system-info',
+    title: '',
+    text: '',
+    audience: 'all',
+    fromId: 'system',
+    fromName: 'Sistema',
+    ...notif
+  };
+  notifications.unshift(n);
+  // Cap at 200 latest
+  if (notifications.length > 200) notifications = notifications.slice(0, 200);
+  save('cilex_notifications', notifications);
+  return n;
+}
+
+function notifVisibleToUser(n, user) {
+  if (!user) return false;
+  const isSA = SUPERADMIN_ROLES.includes(user.role);
+  if (n.audience === 'all') return !isSA; // 'all' targets promoter only
+  if (n.audience === 'superadmin') return isSA;
+  if (n.audience === 'everyone') return true;
+  if (Array.isArray(n.audience)) return n.audience.includes(user.id);
+  return false;
+}
+
+function getUserNotifs() {
+  if (!currentUser) return [];
+  return notifications.filter(n => notifVisibleToUser(n, currentUser));
+}
+
+function isNotifRead(notifId) {
+  if (!currentUser) return false;
+  const list = notifReadMap[currentUser.id] || [];
+  return list.includes(notifId);
+}
+
+function markNotifRead(notifId) {
+  if (!currentUser) return;
+  if (!notifReadMap[currentUser.id]) notifReadMap[currentUser.id] = [];
+  if (!notifReadMap[currentUser.id].includes(notifId)) {
+    notifReadMap[currentUser.id].push(notifId);
+    save('cilex_notif_read', notifReadMap);
+  }
+}
+
+function markAllRead() {
+  const userNotifs = getUserNotifs();
+  userNotifs.forEach(n => markNotifRead(n.id));
+  renderNotifPanel();
+  updateBellBadge();
+  showToast('Tutte segnate come lette', 'success');
+}
+
+function unreadCount() {
+  return getUserNotifs().filter(n => !isNotifRead(n.id)).length;
+}
+
+function updateBellBadge() {
+  const badge = document.getElementById('bell-badge');
+  const bell = document.getElementById('bell-btn');
+  // Tab bar notif badge (per utenti non-SA su mobile)
+  const tabBadge = document.getElementById('tab-notif-badge');
+  if (!badge || !bell) {
+    if (tabBadge) {
+      const n = unreadCount();
+      tabBadge.textContent = n;
+      tabBadge.style.display = n > 0 ? 'flex' : 'none';
+    }
+    return;
+  }
+  const count = unreadCount();
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = '';
+    bell.classList.add('has-unread');
+  } else {
+    badge.style.display = 'none';
+    bell.classList.remove('has-unread');
+  }
+  if (tabBadge) {
+    tabBadge.textContent = count > 99 ? '99+' : count;
+    tabBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+  // Show broadcast button only for superadmin
+  const bcBtn = document.getElementById('notif-broadcast-btn');
+  if (bcBtn) bcBtn.style.display = isSuperAdmin() ? '' : 'none';
+}
+
+function toggleNotifPanel() {
+  notifPanelOpen = !notifPanelOpen;
+  const panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  panel.classList.toggle('open', notifPanelOpen);
+  if (notifPanelOpen) {
+    closeUserDropdown();
+    runSystemNotifChecks();
+    renderNotifPanel();
+    setTimeout(() => document.addEventListener('click', closeNotifOutside, { once: true }), 10);
+  }
+}
+function closeNotifOutside(e) {
+  const panel = document.getElementById('notif-panel');
+  const bell = document.getElementById('bell-btn');
+  if (panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) {
+    closeNotifPanel();
+  }
+}
+function closeNotifPanel() {
+  notifPanelOpen = false;
+  const panel = document.getElementById('notif-panel');
+  if (panel) panel.classList.remove('open');
+}
+
+function setNotifFilter(f) {
+  notifFilter = f;
+  document.querySelectorAll('.notif-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.filter === f);
+  });
+  renderNotifPanel();
+}
+function setNotifSearch(q) {
+  notifSearch = q.toLowerCase();
+  renderNotifPanel();
+}
+
+function notifIconHtml(type) {
+  const map = {
+    'system-urgent':  { cls:'urgent',  svg:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+    'system-warning': { cls:'warning', svg:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+    'system-info':    { cls:'info',    svg:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' },
+    'message':        { cls:'message', svg:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' },
+  };
+  const t = map[type] || map['system-info'];
+  return `<div class="notif-icon ${t.cls}">${t.svg}</div>`;
+}
+
+function relativeTime(iso) {
+  const d = new Date(iso);
+  const diff = (Date.now() - d) / 1000;
+  if (diff < 60) return 'Ora';
+  if (diff < 3600) return Math.floor(diff/60) + ' min fa';
+  if (diff < 86400) return Math.floor(diff/3600) + ' ore fa';
+  if (diff < 172800) return 'Ieri';
+  return d.toLocaleDateString('it-IT');
+}
+
+function dateGroupLabel(iso) {
+  const d = new Date(iso); d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = (today - d) / 86400000;
+  if (diff <= 0) return 'OGGI';
+  if (diff === 1) return 'IERI';
+  if (diff <= 7) return 'QUESTA SETTIMANA';
+  if (diff <= 30) return 'QUESTO MESE';
+  return 'PIÙ VECCHIE';
+}
+
+function renderNotifPanel() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  let items = getUserNotifs();
+
+  // Filter by tab
+  if (notifFilter === 'unread') items = items.filter(n => !isNotifRead(n.id));
+  else if (notifFilter === 'system') items = items.filter(n => n.type.startsWith('system'));
+  else if (notifFilter === 'message') items = items.filter(n => n.type === 'message');
+
+  // Filter by search
+  if (notifSearch) items = items.filter(n =>
+    (n.title||'').toLowerCase().includes(notifSearch) ||
+    (n.text||'').toLowerCase().includes(notifSearch) ||
+    (n.fromName||'').toLowerCase().includes(notifSearch)
+  );
+
+  if (!items.length) {
+    list.innerHTML = `<div class="notif-empty">Nessuna notifica${notifSearch ? ' trovata' : ''}</div>`;
+    return;
+  }
+
+  // Group by date
+  let html = '';
+  let lastGroup = null;
+  for (const n of items) {
+    const grp = dateGroupLabel(n.createdAt);
+    if (grp !== lastGroup) {
+      html += `<div class="notif-date-group">${grp}</div>`;
+      lastGroup = grp;
+    }
+    const unread = !isNotifRead(n.id);
+    const fromLabel = n.type === 'message' && n.fromName ? `<span style="color:var(--cyan);font-weight:600">${n.fromName}</span> · ` : '';
+    html += `
+      <div class="notif-item ${unread ? 'unread' : ''}" onclick="onNotifClick('${n.id}')">
+        ${notifIconHtml(n.type)}
+        <div class="notif-body">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-text">${fromLabel}${n.text}</div>
+          <div class="notif-time">${relativeTime(n.createdAt)}</div>
+        </div>
+      </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function onNotifClick(notifId) {
+  const n = notifications.find(x => x.id === notifId);
+  if (!n) return;
+  markNotifRead(notifId);
+  // If linked to a booking, open it
+  if (n.bookingId) {
+    closeNotifPanel();
+    openDetail(n.bookingId);
+  } else {
+    renderNotifPanel();
+  }
+  updateBellBadge();
+}
+
+// ─── AUTO SYSTEM CHECKS ──────────────────────────────────────────
+// Generates urgent payment notifications for promoters with imminent events
+function runSystemNotifChecks() {
+  if (!currentUser) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // For each user, check pending bookings with event within 3 days
+  team.forEach(member => {
+    const isSA = SUPERADMIN_ROLES.includes(member.role);
+    if (isSA) return; // promoter only
+    const myBookings = bookings.filter(b => b.agentId === member.id && b.paymentStatus === 'pending' && b.date);
+    myBookings.forEach(b => {
+      const eventDate = new Date(b.date); eventDate.setHours(0,0,0,0);
+      const days = Math.round((eventDate - today) / 86400000);
+      if (days < 0 || days > 3) return;
+      // Check we haven't already created a notif for this booking today
+      const todayKey = today.toISOString().slice(0,10);
+      const existing = notifications.find(n =>
+        n.bookingId === b.id &&
+        n.type === 'system-urgent' &&
+        (n.createdAt || '').slice(0,10) === todayKey
+      );
+      if (existing) return;
+      const dayLabel = days === 0 ? 'OGGI' : days === 1 ? 'DOMANI' : `tra ${days} giorni`;
+      pushNotif({
+        type: 'system-urgent',
+        title: `Pagamento urgente — ${b.name}`,
+        text: `Evento ${dayLabel} (${b.product}). Saldo da incassare prima dell'inizio.`,
+        audience: [member.id],
+        bookingId: b.id,
+      });
+    });
+  });
+}
+
+// ─── BROADCAST (superadmin → users) ───────────────────────────────
+function openBroadcastModal() {
+  if (!isSuperAdmin()) return;
+  document.getElementById('bc-title').value = '';
+  document.getElementById('bc-body').value = '';
+  document.getElementById('bc-target').value = 'all';
+  document.getElementById('bc-specific-toggle').checked = false;
+  document.getElementById('bc-target-users-wrap').style.display = 'none';
+  // Populate user checkboxes
+  const promoters = team.filter(m => !SUPERADMIN_ROLES.includes(m.role));
+  document.getElementById('bc-target-users').innerHTML = promoters.length
+    ? promoters.map(m => `
+        <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px">
+          <input type="checkbox" class="bc-user-check" value="${m.id}" style="width:auto">
+          <span>${m.firstname} ${m.lastname}</span>
+          <span style="font-size:10px;color:var(--text3);margin-left:auto">${ROLE_LABELS[m.role]||''}</span>
+        </label>`).join('')
+    : `<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px">Nessun promoter nel team</div>`;
+  document.getElementById('modal-broadcast').classList.add('open');
+}
+
+function toggleBcSpecific() {
+  const checked = document.getElementById('bc-specific-toggle').checked;
+  document.getElementById('bc-target-users-wrap').style.display = checked ? '' : 'none';
+  document.getElementById('bc-target').disabled = checked;
+}
+
+function sendBroadcast() {
+  const title = document.getElementById('bc-title').value.trim();
+  const text = document.getElementById('bc-body').value.trim();
+  if (!title || !text) { showToast('Compila titolo e messaggio', 'error'); return; }
+  let audience;
+  if (document.getElementById('bc-specific-toggle').checked) {
+    const ids = Array.from(document.querySelectorAll('.bc-user-check:checked')).map(c => c.value);
+    if (!ids.length) { showToast('Seleziona almeno un destinatario', 'error'); return; }
+    audience = ids;
+  } else {
+    audience = document.getElementById('bc-target').value;
+  }
+  pushNotif({
+    type: 'message',
+    title,
+    text,
+    audience,
+    fromId: currentUser.id,
+    fromName: (currentUser.firstname || '') + ' ' + (currentUser.lastname || ''),
+  });
+  closeModal('modal-broadcast');
+  showToast('Notifica inviata ✓', 'success');
+  updateBellBadge();
+}
+
+
+function getMoneyHidden() {
+  return load('cilex_money_hidden', false) === true;
+}
+function toggleMoneyVisibility() {
+  save('cilex_money_hidden', !getMoneyHidden());
+  renderDashboard();
+}
+
+function renderDashboard() {
+  _updateDashProfile();
+  if (isSuperAdmin()) {
+    renderAdminDashboard();
+  } else {
+    renderPromoterDashboard();
+  }
+}
+
+function _updateDashProfile() {
+  if (!currentUser) return;
+  const sa = isSuperAdmin();
+  const initials = ((currentUser.firstname?.[0]||'')+(currentUser.lastname?.[0]||'')).toUpperCase();
+  const idx = team.findIndex(m => m.id === currentUser.id);
+  const avCls = AV_CLASSES[Math.max(idx, 0) % 6];
+
+  const avEl = document.getElementById('dash-avatar-initials');
+  const avImg = document.getElementById('dash-avatar-img');
+  if (avEl) { avEl.textContent = initials; avEl.className = 'dash-avatar ' + avCls; }
+
+  const photoKey = 'cilex_profile_img_' + currentUser.id;
+  let savedImg = null;
+  try { savedImg = localStorage.getItem(photoKey); } catch(e) {}
+  if (avImg) {
+    if (savedImg) {
+      avImg.src = savedImg; avImg.style.display = 'block';
+      if (avEl) avEl.style.display = 'none';
+    } else {
+      avImg.style.display = 'none';
+      if (avEl) avEl.style.display = 'flex';
+    }
+  }
+
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  const greetEl = document.getElementById('dash-greeting');
+  if (greetEl) greetEl.textContent = greeting;
+
+  const nameEl = document.getElementById('dash-name');
+  if (nameEl) nameEl.textContent = (currentUser.firstname || '') + ' ' + (currentUser.lastname || '');
+
+  const badgeEl = document.getElementById('dash-role-badge');
+  if (badgeEl) {
+    const roleLabel = sa ? 'SuperAdmin' : 'Utente';
+    const roleColor = sa
+      ? 'color:var(--cyan);background:rgba(62,198,212,0.12);border:1px solid rgba(62,198,212,0.25);'
+      : 'color:var(--text3);background:var(--surface3);border:1px solid var(--border);';
+    const orgLabel = ROLE_LABELS[currentUser.role] || '';
+    badgeEl.innerHTML = '<span style="' + roleColor + '">' + roleLabel + '</span>' +
+      (orgLabel ? '<span style="margin-left:6px;font-size:10px;color:var(--text3);font-family:Barlow,sans-serif">' + orgLabel + '</span>' : '');
+  }
+}
+
+function triggerProfileImageUpload() {
+  const inp = document.getElementById('profile-img-input');
+  if (inp) inp.click();
+}
+
+function onProfileImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file || !currentUser) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 400;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > max) { h = h * max / w; w = max; } }
+      else       { if (h > max) { w = w * max / h; h = max; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const resized = canvas.toDataURL('image/jpeg', 0.85);
+      const photoKey = 'cilex_profile_img_' + currentUser.id;
+      try { localStorage.setItem(photoKey, resized); } catch(e) {}
+      updateUserPill();
+      _updateDashProfile();
+      showToast('Foto profilo aggiornata', 'success');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function renderAdminDashboard() {
+  document.getElementById('urgent-banners').innerHTML = '';
+  document.getElementById('period-filter-wrap').innerHTML = '';
+  document.getElementById('dashboard-table-title').textContent = 'Booking recenti';
+
+  const total = bookings.length;
+  const confirmed = bookings.filter(b => b.paymentStatus === 'confirmed').length;
+  const pending = bookings.filter(b => b.paymentStatus === 'pending').length;
+  const revenue = bookings.filter(b => b.paymentStatus === 'confirmed').reduce((s, b) => s + (parseFloat(b.total) || 0), 0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Booking totali</div>
+      <div class="stat-value">${total}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Confermati</div>
+      <div class="stat-value" style="color:#4ADE80">${confirmed}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In attesa</div>
+      <div class="stat-value" style="color:#FCD34D">${pending}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Incasso</span>
+        <button onclick="toggleMoneyVisibility()" class="money-toggle" title="${getMoneyHidden() ? 'Mostra' : 'Nascondi'}" aria-label="Mostra/Nascondi importo">
+          ${getMoneyHidden()
+            ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'}
+        </button>
+      </div>
+      <div class="stat-value gold">${getMoneyHidden() ? '€••••' : '€'+revenue.toFixed(0)}</div>
+    </div>`;
+
+  // ── Alert booking in attesa entro 3 giorni dall'evento
+  const todayA = new Date(); todayA.setHours(0,0,0,0);
+  const alertBookings = bookings
+    .filter(b => b.paymentStatus === 'pending' && b.date)
+    .map(b => {
+      const eventDate = new Date(b.date); eventDate.setHours(0,0,0,0);
+      const daysUntil = Math.round((eventDate - todayA) / 86400000);
+      return { ...b, daysUntil };
+    })
+    .filter(b => b.daysUntil >= 0 && b.daysUntil <= 3)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
+  if (alertBookings.length) {
+    const alertItems = alertBookings.map(b => {
+      const isCritical = b.daysUntil <= 1;
+      const dayLabel = b.daysUntil === 0 ? '🔴 OGGI' : b.daysUntil === 1 ? '🟠 DOMANI' : `🟡 tra ${b.daysUntil} giorni`;
+      const dateStr = formatDate(b.date);
+      const remaining = b.total ? (parseFloat(b.total) - (parseFloat(b.deposit)||0)).toFixed(2) : null;
+      return `
+        <div class="urgent-banner ${isCritical ? 'critical' : 'warning'}" onclick="openDetail('${b.id}')">
+          <div class="urgent-banner-icon">${isCritical ? '🚨' : '⚠️'}</div>
+          <div class="urgent-banner-body">
+            <div class="urgent-banner-title">${b.name} — Pagamento in attesa</div>
+            <div class="urgent-banner-sub">${b.product}${b.time ? ' · ' + b.time : ''} · ${dateStr} · <em>${b.agent || ''}</em></div>
+            <div class="urgent-banner-meta">
+              <span class="urgent-banner-badge">${dayLabel}</span>
+              ${remaining ? `<span class="urgent-banner-badge">💳 Da saldare: €${remaining}</span>` : ''}
+              ${b.phone ? `<span class="urgent-banner-badge">📞 ${b.phone}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('urgent-banners').innerHTML = `
+      <div class="urgent-section">
+        <div class="urgent-banners-header">
+          🔔 Booking in attesa — ultimi 3 giorni all'evento
+          <span class="urgent-count-pill">${alertBookings.length}</span>
+        </div>
+        <div class="urgent-banners-hint">Contatta i clienti prima della data evento per confermare il pagamento.</div>
+        ${alertItems}
+      </div>`;
+  } else {
+    document.getElementById('urgent-banners').innerHTML = '';
+  }
+
+  const recent = [...bookings].reverse().slice(0, 5);
+  document.getElementById('dashboard-table-wrap').innerHTML = recent.length
+    ? renderTable(recent)
+    : `<div class="empty-state"><div class="empty-icon">📋</div><p>Nessun booking ancora.</p></div>`;
+}
+
+function renderPromoterDashboard() {
+  // ── Period filter UI
+  document.getElementById('period-filter-wrap').innerHTML = `
+    <div class="period-tabs">
+      <button class="period-tab ${dashPeriod==='today'?'active':''}" onclick="setDashPeriod('today')">Oggi</button>
+      <button class="period-tab ${dashPeriod==='3days'?'active':''}" onclick="setDashPeriod('3days')">3 Giorni</button>
+      <button class="period-tab ${dashPeriod==='week'?'active':''}" onclick="setDashPeriod('week')">Settimana</button>
+      <button class="period-tab ${dashPeriod==='month'?'active':''}" onclick="setDashPeriod('month')">Mese</button>
+    </div>`;
+
+  const myBookings = bookings.filter(b => b.agentId === currentUser?.id);
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  // Period range
+  const periodEnd = new Date(now); periodEnd.setHours(23,59,59,999);
+  let periodStart = new Date(now);
+  if (dashPeriod === '3days') periodStart.setDate(now.getDate() - 2);
+  else if (dashPeriod === 'week') periodStart.setDate(now.getDate() - 6);
+  else if (dashPeriod === 'month') periodStart.setDate(now.getDate() - 29);
+
+  // Filter bookings created in period (use createdAt for stats)
+  const inPeriod = myBookings.filter(b => {
+    if (!b.createdAt) return false;
+    const d = new Date(b.createdAt); d.setHours(0,0,0,0);
+    return d >= periodStart && d <= periodEnd;
+  });
+
+  const total = inPeriod.length;
+  const confirmed = inPeriod.filter(b => b.paymentStatus === 'confirmed').length;
+  const pending = inPeriod.filter(b => b.paymentStatus === 'pending').length;
+
+  // Commissioni: sum (total * commission%) for confirmed bookings
+  const commissions = inPeriod
+    .filter(b => b.paymentStatus === 'confirmed')
+    .reduce((s, b) => {
+      const prod = products.find(p => p.name === b.product);
+      const pct = prod?.commission || 0;
+      return s + ((parseFloat(b.total) || 0) * pct / 100);
+    }, 0);
+
+  const periodLabel = { today:'Oggi', '3days':'Ultimi 3 giorni', week:'Questa settimana', month:'Questo mese' }[dashPeriod];
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Numero Ticket</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-chip">${periodLabel}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Confermati</div>
+      <div class="stat-value" style="color:#4ADE80">${confirmed}</div>
+      <div class="stat-chip">${periodLabel}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In attesa</div>
+      <div class="stat-value" style="color:#FCD34D">${pending}</div>
+      <div class="stat-chip">${periodLabel}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Commissioni</span>
+        <button onclick="toggleMoneyVisibility()" class="money-toggle" title="${getMoneyHidden() ? 'Mostra' : 'Nascondi'}" aria-label="Mostra/Nascondi importo">
+          ${getMoneyHidden()
+            ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'}
+        </button>
+      </div>
+      <div class="stat-value gold">${getMoneyHidden() ? '€••••' : '€'+commissions.toFixed(0)}</div>
+      <div class="stat-chip">${periodLabel}</div>
+    </div>`;
+
+  // ── Urgent banners: my pending bookings with event date approaching
+  const today = new Date(); today.setHours(0,0,0,0);
+  const urgentBookings = myBookings
+    .filter(b => b.paymentStatus === 'pending' && b.date)
+    .map(b => {
+      const eventDate = new Date(b.date); eventDate.setHours(0,0,0,0);
+      const daysUntil = Math.round((eventDate - today) / 86400000);
+      return { ...b, daysUntil };
+    })
+    .filter(b => b.daysUntil >= 0 && b.daysUntil <= 3) // events within 3 days
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
+  if (urgentBookings.length) {
+    const banners = urgentBookings.map(b => {
+      const isCritical = b.daysUntil <= 2;
+      const dayLabel = b.daysUntil === 0 ? '🔴 OGGI' : b.daysUntil === 1 ? '🟠 DOMANI' : `🟡 tra ${b.daysUntil} giorni`;
+      const dateStr = formatDate(b.date);
+      const prod = products.find(p => p.name === b.product);
+      const remaining = b.total ? (parseFloat(b.total) - (parseFloat(b.deposit)||0)).toFixed(2) : null;
+      return `
+        <div class="urgent-banner ${isCritical ? 'critical' : 'warning'}" onclick="openDetail('${b.id}')">
+          <div class="urgent-banner-icon">${isCritical ? '🚨' : '⚠️'}</div>
+          <div class="urgent-banner-body">
+            <div class="urgent-banner-title">${b.name} — Pagamento pendente</div>
+            <div class="urgent-banner-sub">${b.product}${b.time ? ' · ' + b.time : ''} · ${dateStr}</div>
+            <div class="urgent-banner-meta">
+              <span class="urgent-banner-badge">${dayLabel}</span>
+              ${remaining ? `<span class="urgent-banner-badge">💳 Da saldare: €${remaining}</span>` : ''}
+              ${b.phone ? `<span class="urgent-banner-badge">📞 ${b.phone}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('urgent-banners').innerHTML = `
+      <div class="urgent-section">
+        <div class="urgent-banners-header">
+          🔔 Booking in attesa — ultimi 3 giorni all'evento
+          <span class="urgent-count-pill">${urgentBookings.length}</span>
+        </div>
+        <div class="urgent-banners-hint">Contatta i clienti prima della data evento per confermare il pagamento.</div>
+        ${banners}
+      </div>`;
+  } else {
+    document.getElementById('urgent-banners').innerHTML = '';
+  }
+
+  // ── Recent table
+  document.getElementById('dashboard-table-title').textContent = 'I miei booking recenti';
+  const recent = [...myBookings].reverse().slice(0, 5);
+  document.getElementById('dashboard-table-wrap').innerHTML = recent.length
+    ? renderTable(recent)
+    : `<div class="empty-state"><div class="empty-icon">📋</div><p>Nessun booking ancora.<br>Crea la prima prenotazione!</p></div>`;
+}
+
+function setDashPeriod(p) {
+  dashPeriod = p;
+  renderPromoterDashboard();
+}
+
+// ─── BOOKINGS TABLE ───────────────────────────────────────────────
+function renderBookingsTable() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const st = document.getElementById('filter-status')?.value || '';
+  const pr = document.getElementById('filter-product')?.value || '';
+
+  // Promoter sees only own bookings
+  const source = can('canViewAllBookings') ? bookings : bookings.filter(b => b.agentId === currentUser?.id);
+
+  let filtered = [...source].reverse().filter(b => {
+    const matchQ = !q || [b.name, b.email, b.phone, b.product].some(f => f?.toLowerCase().includes(q));
+    const matchSt = !st || b.paymentStatus === st;
+    const matchPr = !pr || b.product === pr;
+    return matchQ && matchSt && matchPr;
+  });
+
+  document.getElementById('bookings-table-wrap').innerHTML = filtered.length
+    ? renderTable(filtered, true)
+    : `<div class="empty-state"><div class="empty-icon">🔍</div><p>Nessun risultato trovato.</p></div>`;
+}
+
+function badgeHtml(status) {
+  const map = { confirmed: ['badge-confirmed','Confermato'], pending: ['badge-pending','In attesa'], cancelled: ['badge-cancelled','Cancellato'] };
+  const [cls, label] = map[status] || ['badge-pending', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function renderTable(list, showAll = false) {
+  const canEdit = isSuperAdmin() || can('canEditBooking');
+  const canDel = can('canDeleteBooking');
+
+  const rows = list.map(b => `
+    <tr onclick="openDetail('${b.id}')">
+      <td><div class="td-name">${b.name}</div><div class="td-sub">${b.phone || ''}</div></td>
+      ${showAll ? `<td class="td-sub">${b.email || '—'}</td>` : ''}
+      <td>${b.product || '—'}</td>
+      <td>${b.pax || 1}</td>
+      ${showAll ? `<td>${b.date ? formatDate(b.date) : '—'}</td>` : ''}
+      <td>${b.total ? '€' + parseFloat(b.total).toFixed(0) : '—'}</td>
+      <td>${b.paymentMethod || '—'}</td>
+      <td>${badgeHtml(b.paymentStatus)}</td>
+    </tr>
+  `).join('');
+
+  const extraTh = showAll
+    ? `<th>Email</th><th>Prodotto</th><th>Pax</th><th>Data</th><th>Totale</th><th>Pagamento</th><th>Stato</th>`
+    : `<th>Prodotto</th><th>Pax</th><th>Totale</th><th>Pagamento</th><th>Stato</th>`;
+
+  return `<table><thead><tr><th>Cliente</th>${extraTh}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+// ─── BOOKING SAVE/EDIT ────────────────────────────────────────────
+function saveBooking() {
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const phoneNum = document.getElementById('f-phone').value.trim();
+  const prefix = document.getElementById('f-phone-prefix')?.value || '';
+  const phone = phoneNum ? (prefix + ' ' + phoneNum).trim() : '';
+  const product = document.getElementById('f-product').value;
+  const pax = document.getElementById('f-pax').value;
+
+  if (!name || !email || !phoneNum || !product || !pax) {
+    showToast('Compila i campi obbligatori (*)', 'error'); return;
+  }
+
+  recalcStatus();
+  const paymentStatus = document.getElementById('f-payment-status').value;
+  const id = document.getElementById('edit-id').value;
+  const agentName = currentUser ? (currentUser.firstname + (currentUser.lastname ? ' ' + currentUser.lastname : '')) : '';
+
+  const booking = {
+    id: id || 'b' + Date.now(),
+    name, email, phone, product, pax,
+    date: document.getElementById('f-date').value,
+    time: document.getElementById('f-time').value,
+    agent: agentName,
+    agentId: currentUser?.id || '',
+    location: document.getElementById('f-location').value,
+    language: document.getElementById('f-language').value,
+    paymentMethod: document.getElementById('f-payment-method').value,
+    paymentStatus,
+    total: document.getElementById('f-total').value,
+    deposit: document.getElementById('f-deposit').value,
+    notes: document.getElementById('f-notes').value,
+    createdAt: id ? (bookings.find(b => b.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+  };
+
+  if (id) {
+    const idx = bookings.findIndex(b => b.id === id);
+    if (idx > -1) bookings[idx] = booking;
+  } else {
+    bookings.push(booking);
+    // Notify superadmins of new booking
+    pushNotif({
+      type: 'system-info',
+      title: 'Nuovo booking creato',
+      text: `${agentName || 'Un promoter'} ha creato una prenotazione: ${booking.name} · ${booking.product} (${booking.pax} pax)`,
+      audience: 'superadmin',
+      bookingId: booking.id,
+    });
+  }
+  save('cilex_bookings', bookings);
+  updateBellBadge();
+  showToast(id ? 'Prenotazione aggiornata ✓' : 'Prenotazione salvata ✓', 'success');
+  clearForm();
+  showPage('bookings', null);
+}
+
+function clearForm() {
+  if (_skipClearFormOnce) { _skipClearFormOnce = false; return; }
+  ['f-name','f-email','f-phone','f-deposit','f-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('f-pax').value = 1;
+  document.getElementById('f-total').value = '';
+  document.getElementById('f-date').value = '';
+  document.getElementById('f-product').value = '';
+  document.getElementById('f-payment-method').value = '';
+  document.getElementById('f-language').value = '';
+  document.getElementById('f-payment-status').value = 'pending';
+  document.getElementById('f-payment-status-display').innerHTML = `<span class="badge badge-pending">In attesa</span><span style="font-size:11px;color:var(--text3)">Calcolato automaticamente</span>`;
+  document.getElementById('edit-id').value = '';
+  // Reset prefix to Italy default
+  const prefixEl = document.getElementById('f-phone-prefix');
+  if (prefixEl) prefixEl.value = '+39';
+  // Reset location
+  const locEl = document.getElementById('f-location');
+  if (locEl) locEl.value = '';
+  // Reset time slots
+  document.getElementById('f-time').innerHTML = '<option value="">— Seleziona prima il prodotto —</option>';
+  // set agent from current user
+  const agentEl = document.getElementById('f-agent');
+  if (currentUser) agentEl.value = currentUser.firstname + (currentUser.lastname ? ' ' + currentUser.lastname : '');
+}
+
+let _skipClearFormOnce = false;
+
+function editBooking(id) {
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  closeModal('modal-detail');
+  populateProductSelect();
+  populateLocationSelect();
+  _skipClearFormOnce = true;
+  showPage('new-booking', null);
+  setTimeout(() => {
+    document.getElementById('edit-id').value = b.id;
+    document.getElementById('f-name').value = b.name || '';
+    document.getElementById('f-email').value = b.email || '';
+    // Restore phone prefix + number
+    const phoneStr = b.phone || '';
+    const prefixMatch = phoneStr.match(/^(\+\d{1,4})\s?(.*)$/);
+    const prefixEl = document.getElementById('f-phone-prefix');
+    if (prefixMatch && prefixEl) {
+      // Try to set prefix if it exists in the list
+      const opts = Array.from(prefixEl.options).map(o => o.value);
+      if (opts.includes(prefixMatch[1])) {
+        prefixEl.value = prefixMatch[1];
+        document.getElementById('f-phone').value = prefixMatch[2];
+      } else {
+        document.getElementById('f-phone').value = phoneStr;
+      }
+    } else {
+      document.getElementById('f-phone').value = phoneStr;
+    }
+    document.getElementById('f-product').value = b.product || '';
+    document.getElementById('f-pax').value = b.pax || 1;
+    document.getElementById('f-date').value = b.date || '';
+    document.getElementById('f-agent').value = b.agent || '';
+    document.getElementById('f-location').value = b.location || '';
+    document.getElementById('f-language').value = b.language || '';
+    document.getElementById('f-payment-method').value = b.paymentMethod || '';
+    document.getElementById('f-total').value = b.total || '';
+    // Aggiorna nota commissione per il booking caricato
+    recalcTotal();
+    // Ripristina il totale originale (recalcTotal sovrascrive, ma in edit vogliamo mantenere il valore salvato)
+    if (b.total) document.getElementById('f-total').value = b.total;
+    document.getElementById('f-deposit').value = b.deposit || '';
+    document.getElementById('f-notes').value = b.notes || '';
+    document.getElementById('f-payment-status').value = b.paymentStatus || 'pending';
+    // Update time slots then restore selection
+    updateTimeSlots();
+    setTimeout(() => { document.getElementById('f-time').value = b.time || ''; }, 10);
+    recalcStatus();
+  }, 50);
+}
+
+function deleteBooking(id) {
+  closeModal('modal-detail');
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  document.getElementById('confirm-msg').textContent = `Eliminare la prenotazione di ${b.name}?`;
+  document.getElementById('confirm-action-btn').onclick = () => {
+    bookings = bookings.filter(b => b.id !== id);
+    save('cilex_bookings', bookings);
+    closeModal('modal-confirm');
+    showToast('Prenotazione eliminata', 'error');
+    renderBookingsTable();
+    renderDashboard();
+  };
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+// ─── DETAIL MODAL ────────────────────────────────────────────────
+function openDetail(id) {
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  document.getElementById('modal-title').textContent = b.name;
+  const statusLabels = { confirmed: 'Confermato', pending: 'In attesa', cancelled: 'Cancellato' };
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${b.email || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Telefono</div><div class="detail-value">${b.phone || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Prodotto</div><div class="detail-value">${b.product || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Persone</div><div class="detail-value">${b.pax || 1}</div></div>
+      <div class="detail-row"><div class="detail-label">Data</div><div class="detail-value">${b.date ? formatDate(b.date) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Orario</div><div class="detail-value">${b.time || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Lingua</div><div class="detail-value">${b.language || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Posizione vendita</div><div class="detail-value">${b.location || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Agente</div><div class="detail-value">${b.agent || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Pagamento</div><div class="detail-value">${b.paymentMethod || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Stato</div><div class="detail-value">${badgeHtml(b.paymentStatus)}</div></div>
+      <div class="detail-row"><div class="detail-label">Totale</div><div class="detail-value" style="color:var(--cyan)">${b.total ? '€' + parseFloat(b.total).toFixed(2) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Acconto</div><div class="detail-value">${b.deposit ? '€' + parseFloat(b.deposit).toFixed(2) : '—'}</div></div>
+      ${b.notes ? `<div class="detail-row detail-full"><div class="detail-label">Note</div><div class="detail-value" style="font-weight:400;color:var(--text2)">${b.notes}</div></div>` : ''}
+    </div>
+  `;
+  document.getElementById('modal-edit-btn').onclick = () => editBooking(id);
+  document.getElementById('modal-delete-btn').onclick = () => deleteBooking(id);
+  // Show/hide based on permissions
+  const isOwn = b.agentId === currentUser?.id;
+  document.getElementById('modal-edit-btn').style.display = (isSuperAdmin() || (can('canEditBooking') || isOwn)) ? '' : 'none';
+  document.getElementById('modal-delete-btn').style.display = can('canDeleteBooking') ? '' : 'none';
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+// ─── PRODUCTS ────────────────────────────────────────────────────
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = products.map(p => `
+    <div class="product-card">
+      <div class="product-img-area" style="background:${p.color || '#F5F5F5'}">${p.emoji || '📦'}</div>
+      <div class="product-body">
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc || ''}</div>
+        ${p.duration ? `<div style="font-size:11px;color:var(--text3);margin-bottom:4px">⏱ ${p.duration}</div>` : ''}
+        ${p.commission ? `<div style="font-size:11px;color:#A78BFA;margin-bottom:4px">💰 Commissione: ${p.commission}%</div>` : ''}
+        ${p.timeslots ? `<div style="font-size:11px;color:var(--cyan);margin-bottom:8px">🕐 ${p.timeslots.split('\n').filter(Boolean).length} fasce orarie</div>` : ''}
+        <div class="product-footer">
+          <div class="product-price">Da €${p.price || 0} / pers.</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editProduct('${p.id}')">Modifica</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddProduct() {
+  editingProductId = null;
+  document.getElementById('modal-product-title').textContent = 'Nuovo Prodotto';
+  ['p-name','p-desc','p-price','p-emoji','p-duration','p-notes','p-timeslots','p-commission'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-color').value = '#1A1A1A';
+  document.getElementById('p-emoji').value = '📦';
+  document.getElementById('modal-product').classList.add('open');
+}
+
+function editProduct(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  editingProductId = id;
+  document.getElementById('modal-product-title').textContent = 'Modifica Prodotto';
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-desc').value = p.desc || '';
+  document.getElementById('p-price').value = p.price || '';
+  document.getElementById('p-emoji').value = p.emoji || '';
+  document.getElementById('p-color').value = p.color || '#1A1A1A';
+  document.getElementById('p-duration').value = p.duration || '';
+  document.getElementById('p-notes').value = p.notes || '';
+  document.getElementById('p-timeslots').value = p.timeslots || '';
+  document.getElementById('p-commission').value = p.commission || '';
+  document.getElementById('modal-product').classList.add('open');
+}
+
+function saveProduct() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) { showToast('Inserisci il nome del prodotto', 'error'); return; }
+  const product = {
+    id: editingProductId || 'p' + Date.now(),
+    name,
+    desc: document.getElementById('p-desc').value,
+    price: parseFloat(document.getElementById('p-price').value) || 0,
+    emoji: document.getElementById('p-emoji').value || '📦',
+    color: document.getElementById('p-color').value,
+    duration: document.getElementById('p-duration').value,
+    notes: document.getElementById('p-notes').value,
+    timeslots: document.getElementById('p-timeslots').value.trim(),
+    commission: parseFloat(document.getElementById('p-commission').value) || 0,
+  };
+  if (editingProductId) {
+    const idx = products.findIndex(p => p.id === editingProductId);
+    if (idx > -1) products[idx] = product;
+  } else {
+    products.push(product);
+  }
+  save('cilex_products', products);
+  closeModal('modal-product');
+  renderProducts();
+  showToast(editingProductId ? 'Prodotto aggiornato ✓' : 'Prodotto aggiunto ✓', 'success');
+}
+
+function deleteProduct(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  document.getElementById('confirm-msg').textContent = `Eliminare il prodotto "${p.name}"?`;
+  document.getElementById('confirm-action-btn').onclick = () => {
+    products = products.filter(p => p.id !== id);
+    save('cilex_products', products);
+    closeModal('modal-confirm');
+    renderProducts();
+    showToast('Prodotto eliminato');
+  };
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+// ─── SELECTS POPULATE ─────────────────────────────────────────────
+function populateProductSelect() {
+  const sel = document.getElementById('f-product');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Seleziona prodotto...</option>' +
+    products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+}
+
+function populateProductFilter() {
+  const sel = document.getElementById('filter-product');
+  if (!sel) return;
+  const names = [...new Set(products.map(p => p.name))];
+  sel.innerHTML = '<option value="">Tutti i prodotti</option>' +
+    names.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function populateLocationSelect() {
+  const sel = document.getElementById('f-location');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">—</option>' +
+    locations.map(l => `<option value="${l}">${l}</option>`).join('');
+}
+
+// ─── MODALS ──────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ─── TOAST ───────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────
+function exportCSV() {
+  if (!bookings.length) { showToast('Nessun booking da esportare', 'error'); return; }
+  const headers = ['ID','Nome','Email','Telefono','Prodotto','Persone','Data','Orario','Posizione','Agente','Lingua','Metodo Pagamento','Stato Pagamento','Totale','Acconto','Note','Creato il'];
+  const rows = bookings.map(b => [
+    b.id, b.name, b.email, b.phone, b.product, b.pax, b.date, b.time,
+    b.location, b.agent, b.language, b.paymentMethod, b.paymentStatus,
+    b.total, b.deposit, (b.notes || '').replace(/\n/g,' '),
+    b.createdAt ? new Date(b.createdAt).toLocaleDateString('it-IT') : ''
+  ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`));
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cilex_booking_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV esportato ✓', 'success');
+}
+
+// ─── TEAM ─────────────────────────────────────────────────────────
+
+const ROLES = {
+  'founder':            { label: 'Founder',           cls: 'role-founder' },
+  'manager':            { label: 'Manager',            cls: 'role-manager' },
+  'promoter-lg':        { label: 'Promoter LG',        cls: 'role-promoter-lg' },
+  'promoter-spiaggia':  { label: 'Promoter Spiaggia',  cls: 'role-promoter-spiaggia' },
+  'altro':              { label: 'Altro',               cls: 'role-altro' },
+};
+const ROLE_ORDER = ['founder','manager','promoter-lg','promoter-spiaggia','altro'];
+
+function renderTeam() {
+  const container = document.getElementById('team-sections');
+  const grouped = {};
+  ROLE_ORDER.forEach(r => grouped[r] = []);
+  team.forEach(m => { if (grouped[m.role] !== undefined) grouped[m.role].push(m); else grouped['altro'].push(m); });
+
+  container.innerHTML = ROLE_ORDER.map(role => {
+    const members = grouped[role];
+    if (!members.length) return '';
+    const { label } = ROLES[role];
+    const cards = members.map((m, i) => {
+      const initials = ((m.firstname?.[0] || '') + (m.lastname?.[0] || '')).toUpperCase() || '?';
+      const avClass = 'av-' + (team.indexOf(m) % 6);
+      const roleDef = ROLES[m.role] || ROLES['altro'];
+      return `
+        <div class="team-card">
+          <div class="team-avatar ${avClass}">${initials}</div>
+          <div class="team-info">
+            <div class="team-name">${m.firstname} ${m.lastname}</div>
+            <span class="team-role-badge ${roleDef.cls}">${roleDef.label}</span>
+            <div class="team-contact">
+              ${m.phone ? `<div>📞 <a href="tel:${m.phone}">${m.phone}</a></div>` : ''}
+              ${m.email ? `<div>✉️ <a href="mailto:${m.email}">${m.email}</a></div>` : ''}
+              ${m.notes ? `<div style="color:var(--text3);font-style:italic">${m.notes}</div>` : ''}
+            </div>
+          </div>
+          <div class="team-actions">
+            <button class="btn-icon" onclick="editMember('${m.id}')" title="Modifica">✏️</button>
+            <button class="btn-icon danger" onclick="deleteMember('${m.id}')" title="Elimina">🗑</button>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div>
+        <div class="role-section-title">
+          ${label}
+          <span class="role-count">${members.length}</span>
+        </div>
+        <div class="team-grid">${cards}</div>
+      </div>`;
+  }).join('');
+
+  if (!team.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>Nessun membro nel team.<br>Aggiungi la prima persona!</p></div>`;
+  }
+}
+
+function openAddMember() {
+  editingMemberId = null;
+  document.getElementById('modal-member-title').textContent = 'Nuovo Membro';
+  ['m-firstname','m-lastname','m-phone','m-email','m-notes','m-pin'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('m-role').value = '';
+  document.getElementById('modal-member').classList.add('open');
+}
+
+function editMember(id) {
+  const m = team.find(m => m.id === id);
+  if (!m) return;
+  editingMemberId = id;
+  document.getElementById('modal-member-title').textContent = 'Modifica Membro';
+  document.getElementById('m-firstname').value = m.firstname || '';
+  document.getElementById('m-lastname').value = m.lastname || '';
+  document.getElementById('m-phone').value = m.phone || '';
+  document.getElementById('m-email').value = m.email || '';
+  document.getElementById('m-role').value = m.role || '';
+  document.getElementById('m-notes').value = m.notes || '';
+  document.getElementById('m-pin').value = '';
+  document.getElementById('modal-member').classList.add('open');
+}
+
+function saveMember() {
+  const firstname = document.getElementById('m-firstname').value.trim();
+  const lastname = document.getElementById('m-lastname').value.trim();
+  const role = document.getElementById('m-role').value;
+  if (!firstname || !lastname || !role) { showToast('Compila nome, cognome e ruolo', 'error'); return; }
+  const pinVal = document.getElementById('m-pin').value.trim();
+  if (pinVal && !/^\d{4}$/.test(pinVal)) { showToast('Il PIN deve essere di 4 cifre', 'error'); return; }
+  const member = {
+    id: editingMemberId || 't' + Date.now(),
+    firstname, lastname, role,
+    phone: document.getElementById('m-phone').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    notes: document.getElementById('m-notes').value.trim(),
+    pin: pinVal || (editingMemberId ? (team.find(m => m.id === editingMemberId)?.pin || '') : ''),
+  };
+  if (editingMemberId) {
+    const idx = team.findIndex(m => m.id === editingMemberId);
+    if (idx > -1) team[idx] = member;
+    if (currentUser?.id === editingMemberId) { currentUser = member; save('cilex_current_user', currentUser); updateUserPill(); }
+  } else {
+    team.push(member);
+  }
+  save('cilex_team', team);
+  closeModal('modal-member');
+  renderTeam();
+  showToast(editingMemberId ? 'Membro aggiornato ✓' : 'Membro aggiunto ✓', 'success');
+}
+
+function deleteMember(id) {
+  const m = team.find(m => m.id === id);
+  if (!m) return;
+  document.getElementById('confirm-msg').textContent = `Rimuovere ${m.firstname} ${m.lastname} dal team?`;
+  document.getElementById('confirm-action-btn').onclick = () => {
+    team = team.filter(m => m.id !== id);
+    save('cilex_team', team);
+    closeModal('modal-confirm');
+    renderTeam();
+    showToast('Membro eliminato');
+  };
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────
+function renderSettings() {
+  if (!isSuperAdmin()) return;
+  const perms = loadPerms();
+  const permRows = Object.entries(perms).map(([key, val]) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${val.label}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px">Tutti i Promoter</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" ${val.promoter ? 'checked' : ''} onchange="togglePerm('${key}', this.checked)">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>`).join('');
+
+  document.getElementById('settings-wrap').innerHTML = `
+    <div style="max-width:600px">
+      <div class="card" style="padding:0 20px 8px;margin-bottom:20px">
+        <div style="padding:16px 0 14px;border-bottom:1px solid var(--border);margin-bottom:4px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cyan)">Permessi Promoter</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px">Abilita o disabilita funzionalità per i Promoter</div>
+        </div>
+        ${permRows}
+      </div>
+
+      <div class="card" style="padding:20px;margin-bottom:20px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);margin-bottom:4px">Posizioni Vendita</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Spiagge e location dove operano i promoter. Appaiono nel form prenotazione.</div>
+        <div id="locations-list" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="new-location-input" placeholder="Es. Cala Comte" style="flex:1;padding:8px 11px;font-size:13px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:'Barlow',sans-serif;outline:none" onkeydown="if(event.key==='Enter')addLocation()">
+          <button class="btn btn-gold btn-sm" onclick="addLocation()">+ Aggiungi</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:20px;margin-bottom:20px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);margin-bottom:14px">Ruoli Superadmin</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7">
+          Il seguente ruolo ha sempre accesso completo (SuperAdmin) e non è soggetto ai permessi sopra:<br>
+          <span style="color:var(--cyan);font-weight:600;font-size:13px">Manager</span><br>
+          <span style="color:var(--text3);margin-top:4px;display:inline-block">Tutti gli altri ruoli (Founder, Promoter LG, Promoter Spiaggia, Altro) sono Promoter.</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:20px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);margin-bottom:14px">Gestione Dati</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Esporta CSV Booking
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="resetAllData()">Cancella tutti i dati</button>
+        </div>
+      </div>
+    </div>`;
+
+  renderLocationsList();
+}
+
+function renderLocationsList() {
+  const el = document.getElementById('locations-list');
+  if (!el) return;
+  if (!locations.length) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">Nessuna posizione ancora.</div>`;
+    return;
+  }
+  el.innerHTML = locations.map((l, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;border:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px">
+        <span style="color:var(--text3)">📍</span> ${l}
+      </span>
+      <button class="btn-icon danger" onclick="deleteLocation(${i})" title="Rimuovi">🗑</button>
+    </div>`).join('');
+}
+
+function addLocation() {
+  const input = document.getElementById('new-location-input');
+  const val = input?.value.trim();
+  if (!val) { showToast('Inserisci il nome della posizione', 'error'); return; }
+  if (locations.includes(val)) { showToast('Posizione già presente', 'error'); return; }
+  locations.push(val);
+  save('cilex_locations', locations);
+  input.value = '';
+  renderLocationsList();
+  showToast('Posizione aggiunta ✓', 'success');
+}
+
+function deleteLocation(idx) {
+  const name = locations[idx];
+  document.getElementById('confirm-msg').textContent = `Rimuovere la posizione "${name}"?`;
+  document.getElementById('confirm-action-btn').textContent = 'Rimuovi';
+  document.getElementById('confirm-action-btn').onclick = () => {
+    locations.splice(idx, 1);
+    save('cilex_locations', locations);
+    closeModal('modal-confirm');
+    renderLocationsList();
+    showToast('Posizione rimossa');
+  };
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+function togglePerm(key, value) {
+  const perms = loadPerms();
+  if (perms[key]) perms[key].promoter = value;
+  save('cilex_perms', perms);
+  showToast('Permesso aggiornato ✓', 'success');
+  buildNav();
+}
+
+function resetAllData() {
+  document.getElementById('confirm-msg').textContent = 'Eliminare TUTTI i booking? Questa azione è irreversibile.';
+  document.getElementById('confirm-action-btn').textContent = 'Elimina tutto';
+  document.getElementById('confirm-action-btn').onclick = () => {
+    bookings = [];
+    save('cilex_bookings', []);
+    closeModal('modal-confirm');
+    showToast('Dati eliminati', 'error');
+    renderSettings();
+  };
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────
+
+const ADMIN_PASSWORD = 'Cilexsecret00';
+const ADMIN_USERNAME = 'Ignazio Lanza';
+let adminAuthenticated = false; // flag: superadmin has verified password this session
+let adminHighlightIdx = -1;     // keyboard nav for suggestions
+
+// ── Panel switching ───────────────────────────────────────────────
+function showPromoterLogin() {
+  adminAuthenticated = false;
+  _setLoginPanel('promoter');
+  document.getElementById('lp-username').value = '';
+  document.getElementById('lp-password').value = '';
+  document.getElementById('lp-error').textContent = '';
+}
+
+function showSuperadminLogin() {
+  _setLoginPanel('admin');
+  document.getElementById('la-password').value = '';
+  document.getElementById('la-error').textContent = '';
+  setTimeout(() => document.getElementById('la-password').focus(), 100);
+}
+
+function _setLoginPanel(which) {
+  document.getElementById('login-promoter-panel').style.display = which === 'promoter' ? 'flex' : 'none';
+  document.getElementById('login-admin-panel').style.display   = which === 'admin'    ? 'flex' : 'none';
+  document.getElementById('login-admin-select').style.display  = which === 'select'   ? 'flex' : 'none';
+}
+
+// ── Promoter login ────────────────────────────────────────────────
+function doPromoterLogin() {
+  const username = document.getElementById('lp-username').value.trim();
+  const password = document.getElementById('lp-password').value;
+  const errEl = document.getElementById('lp-error');
+  if (!username || !password) { errEl.textContent = 'Inserisci nome utente e password.'; return; }
+
+  // Find matching team member (non-superadmin)
+  const member = team.find(m => {
+    const fullName = (m.firstname + ' ' + m.lastname).trim().toLowerCase();
+    return fullName === username.toLowerCase() && !SUPERADMIN_ROLES.includes(m.role);
+  });
+
+  if (!member) { errEl.textContent = 'Nome utente non trovato.'; return; }
+
+  // Password check: use member.pin as password if set, else reject
+  // Se il membro non ha un PIN, usa la password di default
+  const memberPwd = member.pin || 'Cilex2026';
+  if (memberPwd !== password) { errEl.textContent = 'Password errata. Riprova.'; return; }
+
+  errEl.textContent = '';
+  doLogin(member);
+}
+
+function togglePwdVisibility() {
+  const inp = document.getElementById('lp-password');
+  const icon = document.getElementById('lp-eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// ── Superadmin auth ───────────────────────────────────────────────
+function doAdminAuth() {
+  const pwd = document.getElementById('la-password').value;
+  const errEl = document.getElementById('la-error');
+  if (pwd !== ADMIN_PASSWORD) { errEl.textContent = 'Password errata.'; return; }
+  errEl.textContent = '';
+  adminAuthenticated = true;
+  _setLoginPanel('select');
+  document.getElementById('la-profile').value = '';
+  document.getElementById('la-select-error').textContent = '';
+  adminHighlightIdx = -1;
+  // Show all profiles immediately so user knows they can pick one
+  setTimeout(() => {
+    document.getElementById('la-profile').focus();
+    showAdminProfileList();
+  }, 100);
+}
+
+function toggleAdminPwdVisibility() {
+  const inp = document.getElementById('la-password');
+  const icon = document.getElementById('la-eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// ── Admin profile selector ────────────────────────────────────────
+function filterAdminProfiles(q) {
+  const sug = document.getElementById('la-suggestions');
+  adminHighlightIdx = -1;
+  const query = (q || '').trim().toLowerCase();
+  // Show all members if empty, else filter
+  const matches = query
+    ? team.filter(m => (m.firstname + ' ' + m.lastname).toLowerCase().includes(query))
+    : team.slice();
+  if (!matches.length) {
+    sug.style.display = 'block';
+    sug.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--text3);text-align:center">Nessun profilo trovato</div>`;
+    return;
+  }
+  const isSAR = r => SUPERADMIN_ROLES.includes(r);
+  sug.innerHTML = matches.map((m, i) => {
+    const roleLabel = isSAR(m.role) ? 'SuperAdmin' : (ROLE_LABELS[m.role] || 'Utente');
+    const roleColor = isSAR(m.role) ? 'color:var(--cyan)' : 'color:var(--text3)';
+    return `<div class="la-suggestion-item" data-id="${m.id}" onclick="pickAdminProfile('${m.id}')">
+      <div>${m.firstname} ${m.lastname}</div>
+      <div class="la-sug-role" style="${roleColor}">${roleLabel}</div>
+    </div>`;
+  }).join('');
+  sug.style.display = 'block';
+}
+
+// Show all profiles when field is focused (even if empty)
+function showAdminProfileList() {
+  filterAdminProfiles(document.getElementById('la-profile').value || '');
+}
+
+function handleAdminProfileKey(e) {
+  const sug = document.getElementById('la-suggestions');
+  const items = sug.querySelectorAll('.la-suggestion-item');
+  if (!items.length) { if (e.key === 'Enter') doAdminSelectLogin(); return; }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    adminHighlightIdx = Math.min(adminHighlightIdx + 1, items.length - 1);
+    _updateAdminHighlight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    adminHighlightIdx = Math.max(adminHighlightIdx - 1, 0);
+    _updateAdminHighlight(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (adminHighlightIdx >= 0 && items[adminHighlightIdx]) {
+      pickAdminProfile(items[adminHighlightIdx].dataset.id);
+    } else {
+      doAdminSelectLogin();
+    }
+  }
+}
+
+function _updateAdminHighlight(items) {
+  items.forEach((el, i) => el.classList.toggle('highlighted', i === adminHighlightIdx));
+}
+
+function pickAdminProfile(id) {
+  const m = team.find(t => t.id === id);
+  if (!m) return;
+  document.getElementById('la-profile').value = m.firstname + ' ' + m.lastname;
+  document.getElementById('la-suggestions').style.display = 'none';
+  document.getElementById('la-select-error').textContent = '';
+  adminHighlightIdx = -1;
+  // Auto-login: admin already authenticated, no need for extra step
+  if (adminAuthenticated) doLogin(m);
+}
+
+function doAdminSelectLogin() {
+  if (!adminAuthenticated) { showPromoterLogin(); return; }
+  const val = document.getElementById('la-profile').value.trim();
+  const errEl = document.getElementById('la-select-error');
+  if (!val) { errEl.textContent = 'Inserisci un nome profilo.'; return; }
+  const member = team.find(m =>
+    (m.firstname + ' ' + m.lastname).toLowerCase() === val.toLowerCase()
+  );
+  if (!member) { errEl.textContent = 'Profilo non trovato. Controlla il nome.'; return; }
+  errEl.textContent = '';
+  doLogin(member);
+}
+
+// ── Legacy helpers (kept for compatibility) ───────────────────────
+function buildLoginUsers() {
+  // New system: show promoter panel by default
+  if (!adminAuthenticated) showPromoterLogin();
+}
+
+function showUserList() {
+  showPromoterLogin();
+}
+
+// ── doLogin ───────────────────────────────────────────────────────
+function doLogin(member) {
+  currentUser = member;
+  save('cilex_current_user', currentUser);
+  document.getElementById('login-screen').style.display = 'none';
+  buildNav();
+  updateUserPill();
+  renderDashboard();
+  runSystemNotifChecks();
+  updateBellBadge();
+  const dash = document.getElementById('nav-dashboard');
+  if (dash) dash.classList.add('active');
+  const tabDash = document.getElementById('tab-dashboard');
+  if (tabDash) tabDash.classList.add('active');
+}
+
+function skipLogin() {
+  currentUser = { id: 'guest', firstname: 'Ospite', lastname: '', role: 'manager' };
+  save('cilex_current_user', currentUser);
+  document.getElementById('login-screen').style.display = 'none';
+  buildNav();
+  updateUserPill();
+  renderDashboard();
+  showToast('Accesso ospite — aggiungi i membri del team per uscire dalla modalità ospite', 'success');
+}
+
+// ─── USER DROPDOWN ────────────────────────────────────────────────
+
+function toggleUserDropdown() {
+  dropdownOpen = !dropdownOpen;
+  const dd = document.getElementById('user-dropdown');
+  dd.style.display = dropdownOpen ? 'block' : 'none';
+  if (dropdownOpen) {
+    // populate user info
+    const isSA = isSuperAdmin();
+    const roleLabel = isSA ? 'SuperAdmin' : 'Utente';
+    const roleColor = isSA ? 'var(--cyan)' : 'var(--text3)';
+    document.getElementById('dd-name').textContent = currentUser ? currentUser.firstname + ' ' + (currentUser.lastname || '') : '—';
+    document.getElementById('dd-role').textContent = '';
+    document.getElementById('dd-role').innerHTML = `<span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:4px;letter-spacing:0.8px;color:${roleColor};background:${isSA?'rgba(62,198,212,0.12)':'var(--surface3)'};border:1px solid ${isSA?'rgba(62,198,212,0.25)':'var(--border)'};">${roleLabel}</span> <span style="color:var(--text3)">${ROLE_LABELS[currentUser?.role]||''}</span>`;
+    setTimeout(() => document.addEventListener('click', closeDropdownOutside, { once: true }), 10);
+  }
+}
+
+function closeDropdownOutside(e) {
+  if (!document.getElementById('user-dropdown')?.contains(e.target) &&
+      !document.getElementById('topbar-user-pill')?.contains(e.target)) {
+    closeUserDropdown();
+  }
+}
+
+function closeUserDropdown() {
+  dropdownOpen = false;
+  const dd = document.getElementById('user-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function logout() {
+  closeUserDropdown();
+  if (!currentUser) return;
+  // Populate logout modal card
+  const initials = ((currentUser.firstname?.[0]||'')+(currentUser.lastname?.[0]||'')).toUpperCase() || '?';
+  const idx = team.findIndex(m => m.id === currentUser.id);
+  const avCls = AV_CLASSES[Math.max(idx, 0) % 6];
+  const av = document.getElementById('logout-av');
+  av.textContent = initials;
+  av.className = 'team-avatar ' + avCls;
+  av.style.cssText = 'width:36px;height:36px;font-size:13px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+  document.getElementById('logout-name').textContent = currentUser.firstname + ' ' + (currentUser.lastname || '');
+  document.getElementById('logout-role').textContent = ROLE_LABELS[currentUser.role] || currentUser.role || '';
+  document.getElementById('modal-logout').classList.add('open');
+}
+
+function confirmLogout() {
+  currentUser = null;
+  save('cilex_current_user', null);
+  adminAuthenticated = false;
+  closeModal('modal-logout');
+  showPromoterLogin();
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function switchUser() {
+  closeUserDropdown();
+  if (!currentUser) return;
+  // Populate logout modal card
+  const initials = ((currentUser.firstname?.[0]||'')+(currentUser.lastname?.[0]||'')).toUpperCase() || '?';
+  const idx = team.findIndex(m => m.id === currentUser.id);
+  const avCls = AV_CLASSES[Math.max(idx, 0) % 6];
+  const av = document.getElementById('logout-av');
+  av.textContent = initials;
+  av.className = 'team-avatar ' + avCls;
+  av.style.cssText = 'width:36px;height:36px;font-size:13px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+  document.getElementById('logout-name').textContent = currentUser.firstname + ' ' + (currentUser.lastname || '');
+  document.getElementById('logout-role').textContent = ROLE_LABELS[currentUser.role] || currentUser.role || '';
+  document.getElementById('modal-logout').classList.add('open');
+}
+
+function updateUserPill() {
+  if (!currentUser) return;
+  const initials = ((currentUser.firstname?.[0]||'')+(currentUser.lastname?.[0]||'')).toUpperCase() || '?';
+  const idx = team.findIndex(m => m.id === currentUser.id);
+  const avCls = AV_CLASSES[Math.max(idx, 0) % 6];
+  const av = document.getElementById('topbar-av');
+
+  // Photo or initials in topbar
+  const photoKey = 'cilex_profile_img_' + currentUser.id;
+  let savedImg = null;
+  try { savedImg = localStorage.getItem(photoKey); } catch(e) {}
+  if (savedImg) {
+    av.textContent = '';
+    av.style.backgroundImage = 'url(' + savedImg + ')';
+    av.style.backgroundSize = 'cover';
+    av.style.backgroundPosition = 'center';
+    av.className = 'user-pill-av';
+  } else {
+    av.textContent = initials;
+    av.style.backgroundImage = '';
+    av.className = 'user-pill-av ' + avCls;
+  }
+  const shortName = currentUser.firstname + (currentUser.lastname ? ' ' + currentUser.lastname[0] + '.' : '');
+  document.getElementById('topbar-user-name').textContent = shortName;
+}
+
+// ─── PRICE & STATUS AUTO-CALC ─────────────────────────────────────
+function onProductChange() {
+  recalcTotal();
+  updateTimeSlots();
+}
+
+function updateTimeSlots() {
+  const productName = document.getElementById('f-product').value;
+  const sel = document.getElementById('f-time');
+  if (!productName) {
+    sel.innerHTML = '<option value="">— Seleziona prima il prodotto —</option>';
+    return;
+  }
+  const prod = products.find(p => p.name === productName);
+  const slots = prod?.timeslots ? prod.timeslots.split('\n').map(s => s.trim()).filter(Boolean) : [];
+  if (!slots.length) {
+    sel.innerHTML = '<option value="">— Nessun orario configurato —</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Seleziona orario...</option>' +
+    slots.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function recalcTotal() {
+  const productName = document.getElementById('f-product').value;
+  const pax = parseInt(document.getElementById('f-pax').value) || 1;
+  const payMethod = document.getElementById('f-payment-method').value;
+  const prod = products.find(p => p.name === productName);
+  const price = prod ? (parseFloat(prod.price) || 0) : 0;
+  const baseTotal = price * pax;
+
+  // +10% arrotondato per eccesso per tutti i metodi tranne Contanti
+  const isCash = payMethod === 'Contanti' || payMethod === '' || !payMethod;
+  const surcharge = isCash ? 0 : Math.ceil(baseTotal * 0.10);
+  const total = baseTotal + surcharge;
+
+  document.getElementById('f-total').value = total > 0 ? total.toFixed(2) : '';
+
+  // Nota commissione
+  const noteEl = document.getElementById('f-surcharge-note');
+  const textEl = document.getElementById('f-surcharge-text');
+  if (noteEl && textEl) {
+    if (!isCash && baseTotal > 0) {
+      textEl.textContent = '+10% pagamento elettronico: +€' + surcharge + ' (base €' + baseTotal.toFixed(0) + ')';
+      noteEl.style.display = 'flex';
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
+
+  recalcStatus();
+}
+
+function recalcStatus() {
+  const total = parseFloat(document.getElementById('f-total').value) || 0;
+  const deposit = parseFloat(document.getElementById('f-deposit').value) || 0;
+  const status = (total > 0 && deposit >= total) ? 'confirmed' : 'pending';
+  document.getElementById('f-payment-status').value = status;
+  const display = document.getElementById('f-payment-status-display');
+  const badgeMap = {
+    confirmed: `<span class="badge badge-confirmed">Confermato</span><span style="font-size:11px;color:var(--text3);margin-left:4px">Pagamento completo</span>`,
+    pending:   `<span class="badge badge-pending">In attesa</span><span style="font-size:11px;color:var(--text3);margin-left:4px">Calcolato automaticamente</span>`,
+    cancelled: `<span class="badge badge-cancelled">Cancellato</span>`,
+  };
+  display.innerHTML = badgeMap[status];
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+function initApp() {
+  if (currentUser) {
+    // Restore session — go straight to app
+    document.getElementById('login-screen').style.display = 'none';
+    buildNav();
+    updateUserPill();
+    renderDashboard();
+    runSystemNotifChecks();
+    updateBellBadge();
+    const dash = document.getElementById('nav-dashboard');
+    if (dash) dash.classList.add('active');
+    const tabDash = document.getElementById('tab-dashboard');
+    if (tabDash) tabDash.classList.add('active');
+  } else {
+    // No session: show promoter login by default
+    showPromoterLogin();
+  }
+}
+
+// iOS: prevent pinch-zoom (some Safari versions ignore viewport meta)
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
+
+// iOS: prevent double-tap zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+</script>
+<!-- TAB BAR (mobile - built dynamically by buildNav) -->
+<nav class="tab-bar" id="tab-bar">
+</nav>
+
+</body>
+</html>
