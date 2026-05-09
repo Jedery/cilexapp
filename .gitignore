@@ -7,3 +7,4 @@ node_modules/
 supabase.conf
 migrate.js
 verify-db.js
+README_LAST.md
